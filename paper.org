@@ -1,0 +1,317 @@
+#+title:UK ancestry paper
+#+author:Dan, Chris, Peter et al.
+
+* Tasks							:taskjuggler_project:
+*** TODO Propose involvement of MS Consortium
+    SCHEDULED: <2010-04-01 Thu>
+    :PROPERTIES:
+    :Effort:   1:00
+    :allocate: Peter
+    :END:
+
+    We want to study the ~2900 PoBI individuals in the context of an
+    augmented data set including individuals from continental
+    Europe. Particularly desired MS collections, with numbers:
+      |         | MS cases | MS controls |
+      |---------+----------+-------------|
+      | Norway  |     1030 |         125 |
+      | Germany |     1166 |     468+784 |
+      | Iberia  |      211 |             |
+      | France  |      536 |         357 |
+      | Ireland |       73 |             |
+    
+*** TODO Create combined MS+PoBI post-QC dataset
+    SCHEDULED: <2010-04-05 Mon>--<2010-04-09 Fri>
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: DanChris
+    :END:
+    - at Illumina SNPs
+
+*** TODO Create phased data set
+    SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: DanChris
+    :END:
+    - How will we phase these data?
+
+*** TODO Copying analyses
+    SCHEDULED: <2010-04-19 Mon>--<2010-04-30 Fri>
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: Dan
+    :END:
+    - Speak to Garrett
+    - How does Norwegian/German/Spanish influence vary across the UK?
+    - Is there any evidence that Western Fringe populations have
+      greater Iberian contribution?
+    - Can we see that Norwegian/German contributions are recent?
+    
+*** TODO PCA
+    SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: Dan
+    :END:
+    - All individuals
+    - UK alone
+      [[file:pobi-pca-scatter-zoom.png]]
+
+*** TODO Unlinked Structure mixture modelling
+    SCHEDULED: <2010-04-26 Mon>--<2010-04-30 Fri>
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: Dan
+    :END:
+    - All individuals
+    - UK alone
+
+*** TODO Analysis of UK regions
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: Dan
+    :END:
+    - SNP-by-SNP \Chi-squared / F_st tests
+      - Q-Q plots
+
+*** TODO Differentiation at loci of interest
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: DanChris
+    :END:
+    E.g.
+    - Loci from deCODE paper
+    - Previously-identified differentiated regions
+
+*** TODO Autosomal differentiation of groups defined by Y and mtDNA haplogroups
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: DanChris
+    :END:
+    - SNPs used by 23andme
+
+*** TODO Relatedness analyses
+    :PROPERTIES:
+    :Effort:   32:00
+    :allocate: DanChris
+    :END:
+    - Analyse pairwise relatedness matrix
+    - Do non-nearby close relatives tend to occur in certain
+      locations?
+    - Which regions have highest relatedness?
+    - To what extent does this reflect collection procedures versus
+      history?
+
+* Resources					       :taskjuggler_resource:
+*** DanChris
+***** Dan 						       
+***** Chris 					       
+*** Chris
+*** Dan
+*** Peter
+* Logistics [0/4]
+*** TODO Agree on contributors / authors
+    - [X] Chris?
+    - [ ] MS people?
+    - [ ] Garrett & Simon?
+    - [ ] Celine & Amy?
+    - [ ] no problems with PoBI people?
+*** TODO Agree on data
+    - Illumina / MS?
+      - I need MS population labels ASAP
+    - Affy / POPRES? If so, what Norwegians?
+*** TODO Publication scope
+    Is there to be a less UK-centric Europe paper?
+* Continental Data
+*** Illumina
+|         | HGDP | MS cases | MS controls | PoBI       | Etc                              |
+|---------+------+----------+-------------+------------+----------------------------------|
+| UK      |      |     2048 |             | 2912 - 368 |                                  |
+| Ireland |      |       73 |             |            |                                  |
+| Iberia  |      |      211 |             |            |                                  |
+| France  |      |      536 |         357 |            |                                  |
+| Germany |      |     1166 |     468+784 |            |                                  |
+| Norway  |      |     1030 |         125 |            | Pillai et al. PLoS Genetics 2009 |
+
+*** Affy
+|         | POPRES | Kiel (=popgen) | PoBI       |
+|---------+--------+----------------+------------|
+| UK      |    424 |                | 2930 - 475 |
+| Ireland |     61 |                |            |
+| Iberia  |    270 |                |            |
+| France  |    205 |                |            |
+| Germany |        |            483 |            |
+| Norway  |      2 |                |            |
+
+*** MS
+MS_internal (cases):
+Spain 211
+Norway 1030
+UK   2048
+Sweden 1401
+France 536
+Poland 59
+Denmark 363
+Belgium 566
+Australia 705
+NewZealand 156
+USA  1634
+Italy 776
+Germany 1166
+Ireland 73
+FIN 652
+
+MS_external (controls):
+CHOP550 3024
+Kora 486
+Norwegian 125
+Popgen 468
+SwedishBC 764
+CHOP555 991
+CHOP610 2554
+CNG610French 357
+CNG610German 784
+HEALTHMET610 2355
+Italy 619
+SwedishProcardis 678
+
+CHOPxx=USA; HEALTHMET610=Finnish; Popgen=German (though they appear to
+be very northern; do not want to copy much Italian at all when allowed
+to match HapMap3 pops)
+
+*** POPRES
+	
+	[[file:~/lit/novembre-etal-2008-popres-europe.pdf][paper.pdf]]
+#+begin_src sh :dir /davison@oak.well.ox.ac.uk:data/popres
+  sed 1d genome-res/GSK_sample_info.tsv | cut -f4 | table | sort -nr -k2
+#+end_src
+
+#+results:
+| Switzerland        | 1325 |
+| United             |  424 |
+| Kingdom            |  424 |
+| Italy              |  213 |
+| France             |  205 |
+| India              |  199 |
+| Spain              |  137 |
+| Portugal           |  133 |
+| Canada             |  133 |
+| Mexico             |  112 |
+| Taiwan             |  108 |
+| Germany            |   88 |
+| Australia          |   78 |
+| Japan              |   73 |
+| Ireland            |   61 |
+| Yugoslavia         |   47 |
+| Pakistan           |   45 |
+| USA                |   44 |
+| Belgium            |   43 |
+| Africa             |   35 |
+| East               |   30 |
+| Kenya              |   29 |
+| Poland             |   26 |
+| Netherlands        |   21 |
+| Hungary            |   20 |
+| Sri                |   18 |
+| Lanka              |   18 |
+| Romania            |   16 |
+| Austria            |   16 |
+| Sweden             |   15 |
+| Republic           |   14 |
+| Czech              |   14 |
+| Unknown            |   13 |
+| Greece             |    9 |
+| Croatia            |    9 |
+| Bosnia-Herzegovina |    9 |
+| Russia             |    8 |
+| Turkey             |    7 |
+| Argentina          |    7 |
+| Scotland           |    6 |
+| Egypt              |    6 |
+| Algeria            |    6 |
+| Uganda             |    5 |
+| Morocco            |    5 |
+| Congo              |    5 |
+| Angola             |    5 |
+| South              |    4 |
+| Macedonia          |    4 |
+| Cyprus             |    4 |
+| Tunisia            |    3 |
+| Singapore          |    3 |
+| Israel             |    3 |
+| Albania            |    3 |
+| Afghanistan        |    3 |
+| Zimbabwe           |    2 |
+| Zealand            |    2 |
+| Ukraine            |    2 |
+| Norway             |    2 |
+| New                |    2 |
+| Mozambique         |    2 |
+| Lebanon            |    2 |
+| Iran               |    2 |
+| Finland            |    2 |
+| China              |    2 |
+| Bulgaria           |    2 |
+| America            |    2 |
+| Venezuela          |    1 |
+| USSR               |    1 |
+| Tanzania           |    1 |
+| Slovenia           |    1 |
+| Slovakia           |    1 |
+| Serbia             |    1 |
+| Senegal            |    1 |
+| Peru               |    1 |
+| North              |    1 |
+| Malta              |    1 |
+| Luxembourg         |    1 |
+| Latvia             |    1 |
+| Kosovo             |    1 |
+| Ivory              |    1 |
+| Iraq               |    1 |
+| Grenada            |    1 |
+| Gibraltar          |    1 |
+| Europe             |    1 |
+| Denmark            |    1 |
+| Coast              |    1 |
+| Cameroon           |    1 |
+| Burundi            |    1 |
+| Burma              |    1 |
+| Bangladesh         |    1 |
+	
+* Abstract
+* Introduction
+* Results
+*** PCA: congruence of genetic and geographic maps
+[[file:pobi-pca-scatter-zoom.png]]    
+*** Structure (parallel)
+*** Copying source populations
+    
+    Use Affy data for individuals from the Iberian and "northern
+    German" areas of the POPRES map, and from Kiel.
+
+    - fit HMM to one UK individual at a time
+    - fit to unphased data?
+*** Relatedness
+*** Haplogroups
+* Notes								   :noexport:
+*** Cristian Capelli
+    papers
+***** Y
+      - dan bradley
+      - mark thomas & mike weale
+      - jim wilson
+      - rossa et al.
+      - jobling
+      - semino et al. science
+***** mt
+     - richards
+     - curr biol review
+     - encyl. life sciences: wilson, capelli, richards
+     - 
+
+* Config							   :noexport:
+#+seq_todo: TODO | DONE
+#+options: toc:nil num:nil
+#+PROPERTY: Effort_ALL 0 1:00 2:00 4:00 8:00 16:00 32:00 64:00 128:00
+#+COLUMNS: %60ITEM(Task) %10allocate(Resource) %17Effort(Estimated Effort){:} %CLOCKSUM
