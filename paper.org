@@ -1,8 +1,75 @@
-#+title:UK ancestry paper
-#+author:Dan, Chris, Peter et al.
+#+title:A genome-wide perspective on the peopling of the British Isles
+#+author:Dan, Chris, Garrett, Peter et al.
 
+
+* Data
+PoBI + MS cases (Illumina)
+
+|         | HGDP | MS cases | MS controls | PoBI       | Etc                              |
+|---------+------+----------+-------------+------------+----------------------------------|
+| UK      |      |     2048 |             | 2912 - 368 |                                  |
+| Ireland |      |       73 |             |            |                                  |
+| Iberia  |      |      211 |             |            |                                  |
+| France  |      |      536 |         357 |            |                                  |
+| Germany |      |     1166 |     468+784 |            |                                  |
+| Norway  |      |     1030 |         125 |            | Pillai et al. PLoS Genetics 2009 |
+
+#+begin_src sh :var ms="~/Work/Papers/PoBI/MS_illumina.sample.geoinfoIII"
+ sed 1d $ms | cut -d' ' -f3 | ~/bin/table
+#+end_src
+
+#+results:
+| Australia  |  705 |
+| Belgium    |  566 |
+| Denmark    |  363 |
+| FIN        |  652 |
+| France     |  536 |
+| Germany    | 1166 |
+| Ireland    |   73 |
+| Italy      |  776 |
+| NewZealand |  156 |
+| Norway     | 1030 |
+| Poland     |   59 |
+| Spain      |  211 |
+| Sweden     | 1401 |
+| UK         | 2048 |
+| USA        | 1634 |
+
+#+begin_src R :var ms="~/Work/Papers/PoBI/MS_illumina.sample.geoinfoIII" :session :rownames yes
+  n <- table(scan(pipe(sprintf("sed 1d %s | cut -d' ' -f3", ms)), what=""))
+  bad <- c("FIN","USA","NewZealand","Australia")
+  n <- indivs[!names(n) %in% bad]
+  n
+#+end_src
+
+#+tblname:ms-pobi
+| Norway    | 1030 |
+| Sweden    | 1401 |
+| Denmark   |  363 |
+| Germany   | 1166 |
+| Poland    |   59 |
+| Belgium   |  566 |
+| France    |  536 |
+| Italy     |  776 |
+| Spain     |  211 |
+| Ireland   |   73 |
+| UK        | 2048 |
+| UK - PoBI | 2912 |
+
+#+begin_src R :var mspobi=ms-pobi :rownames yes
+  sum(mspobi)
+#+end_src
+
+#+results:
+| 1 | 11141 |
+* Phone call <2010-05-21 Fri>
+- How to phase?
+  - Regions separately?
+- Where are German individuals from?
+- Irish?
+- impute 2 - bryan howie
 * Tasks							:taskjuggler_project:
-*** TODO Propose involvement of MS Consortium
+*** DONE Propose involvement of MS Consortium
     SCHEDULED: <2010-04-01 Thu>
     :PROPERTIES:
     :Effort:   1:00
@@ -20,21 +87,23 @@
       | France  |      536 |         357 |
       | Ireland |       73 |             |
     
+*** DONE Sample information
+- Where are German individuals from?
+- Irish?
 *** TODO Create combined MS+PoBI post-QC dataset
     SCHEDULED: <2010-04-05 Mon>--<2010-04-09 Fri>
     :PROPERTIES:
     :Effort:   32:00
     :allocate: DanChris
     :END:
-    - at Illumina SNPs
 
-*** TODO Create phased data set
+*** TODO Create phased data sets
     SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
     :PROPERTIES:
     :Effort:   32:00
     :allocate: DanChris
     :END:
-    - How will we phase these data?
+**** All individuals jointly phased using CEU+TSI 
 
 *** TODO Copying analyses
     SCHEDULED: <2010-04-19 Mon>--<2010-04-30 Fri>
@@ -119,20 +188,12 @@
     - [ ] no problems with PoBI people?
 *** TODO Agree on data
     - Illumina / MS?
-      - I need MS population labels ASAP
+      - I need MS population labels
     - Affy / POPRES? If so, what Norwegians?
 *** TODO Publication scope
     Is there to be a less UK-centric Europe paper?
 * Continental Data
 *** Illumina
-|         | HGDP | MS cases | MS controls | PoBI       | Etc                              |
-|---------+------+----------+-------------+------------+----------------------------------|
-| UK      |      |     2048 |             | 2912 - 368 |                                  |
-| Ireland |      |       73 |             |            |                                  |
-| Iberia  |      |      211 |             |            |                                  |
-| France  |      |      536 |         357 |            |                                  |
-| Germany |      |     1166 |     468+784 |            |                                  |
-| Norway  |      |     1030 |         125 |            | Pillai et al. PLoS Genetics 2009 |
 
 *** Affy
 |         | POPRES | Kiel (=popgen) | PoBI       |
@@ -181,7 +242,6 @@ be very northern; do not want to copy much Italian at all when allowed
 to match HapMap3 pops)
 
 *** POPRES
-	
 	[[file:~/lit/novembre-etal-2008-popres-europe.pdf][paper.pdf]]
 #+begin_src sh :dir /davison@oak.well.ox.ac.uk:data/popres
   sed 1d genome-res/GSK_sample_info.tsv | cut -f4 | table | sort -nr -k2
@@ -279,7 +339,18 @@ to match HapMap3 pops)
 | Burma              |    1 |
 | Bangladesh         |    1 |
 	
+* Emails
+[[gnus:nnmairix%2Bmairix:#FB068F92BA9F2C45BEBCC3E7C1F32B260B93B7@exchange1.stats.ox.ac.uk][Email from Chris Spencer: FW: MS good news]]
 * Abstract
+The post-glacial history of human occupation of the British Isles has
+received a lot of attention from archeologists and historians during
+the last 250 years, and from geneticists during the last three
+decades. Here we address some of the key questions in this literature
+using genome-wide genetic variation data. Mixture modeling and
+principal component analyses recover genome-wide geographic clines
+that are consistent with continental patterns and thus consistent with
+a null model of isolation by distance.
+
 * Introduction
 * Results
 *** PCA: congruence of genetic and geographic maps
