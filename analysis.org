@@ -1,0 +1,298 @@
+#+title:A genome-wide perspective on the peopling of the British Isles
+#+author:Dan, Chris, Garrett, Peter et al.
+
+#+babel: :dir /davison@oak.well.ox.ac.uk:bench :cache yes
+
+* Environment
+** Org
+#+begin_src emacs-lisp :cache no
+  (setq org-babel-default-header-args:R '((:session . "*R-PoBI*")))
+#+end_src
+
+#+results:
+| (:session . *R-PoBI*) |
+
+** Variables
+#+source: MS-ifile
+#+begin_src emacs-lisp
+"data/MS/MS_illumina.sample.geoinfoIII"
+#+end_src
+
+#+results[c52bd1ba036e4512e150e247e25fa684ffeabb4e]: MS-ifile
+: data/MS/MS_illumina.sample.geoinfoIII
+
+** R environment
+#+begin_src R :var ifile=MS-ifile :results silent
+  MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
+  colnames(MSindivs) <- "country"
+#+end_src
+
+* DONE MS exclusions
+** Select countries
+#+tblname: include-countries
+| Country | n    |
+|---------+------|
+| Belgium |  566 |
+| Denmark |  363 |
+| France  |  536 |
+| Germany | 1166 |
+| Ireland |   73 |
+| Italy   |  776 |
+| Norway  | 1030 |
+| Poland  |   59 |
+| Spain   |  211 |
+| Sweden  | 1401 |
+
+#+begin_src R :var include.countries=include-countries :rownames yes :colnames yes
+  include.countries <- rownames(include.countries)
+  MSindivs$include <- MSindivs$country %in% include.countries
+  system("mkdir -p data/MS/exclusions")
+  cat(rownames(MSindivs)[!MSindivs$include], file="data/MS/exclusions/country-exclusions", sep="\n")
+  table(MSindivs$country, MSindivs$include)
+#+end_src
+
+#+results:
+|            | FALSE | TRUE |
+|------------+-------+------|
+| Australia  |   705 |    0 |
+| Belgium    |     0 |  566 |
+| Denmark    |     0 |  363 |
+| FIN        |   652 |    0 |
+| France     |     0 |  536 |
+| Germany    |     0 | 1166 |
+| Ireland    |     0 |   73 |
+| Italy      |     0 |  776 |
+| NewZealand |   156 |    0 |
+| Norway     |     0 | 1030 |
+| Poland     |     0 |   59 |
+| Spain      |     0 |  211 |
+| Sweden     |     0 | 1401 |
+| UK         |  2048 |    0 |
+| USA        |  1634 |    0 |
+
+** Exclusions
+
+#+begin_src sh
+cat data/MS/exclusions/* | sort | uniq > data/MS/exclusions.all
+#+end_src
+
+#+begin_src sh :session none
+wc -l data/MS/exclusions/*
+echo $(cat data/MS/exclusions/* | sort | uniq | wc -l) unique
+wc -l data/MS/exclusions.all
+#+end_src
+
+#+results:
+|  910 | data/MS/exclusions/MSInternalExclusions.dan.txt |
+| 5195 | data/MS/exclusions/country-exclusions           |
+| 6105 | total                                           |
+| 5565 | unique                                          |
+| 5565 | data/MS/exclusions.all                          |
+* DONE Create combined POBI+MS data set
+:PROPERTIES:
+:dir: /davison@oak.well.ox.ac.uk:bench
+:END:
+
+#+begin_src sh
+  cd data/POBI+MS
+  for chrom in `seq -w 1 22` ; do
+      python ~/src/wtccc2/wtccc2-analyse/wtccc2-analyse.py \
+          --make-gen --platform illumina \
+          --cohorts 'MS POBI' --exclude ../MS/exclusions.all \
+          --chrom $chrom --outfile $chrom
+  done
+#+end_src
+
+
+What is the explanation of this line in the output?
+MS: 2 excluded individuals not recognised
+
+#+begin_example
+Mon May 24 00:33:29 2010
+Analysis                      PCA
+Cohorts                       ['MS', 'POBI']
+Chromosomes                   [22]
+SNP file                      None
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Intersecting chromosome files
+
+gunzip -vc /data/oak/project/wtccc2/MS/illumina/calls/MS_22_illumina.gen.gz > MS-22.tmp
+/data/oak/project/wtccc2/MS/illumina/calls/MS_22_illumina.gen.gz:	 93.8%
+gunzip -vc /data/oak/project/wtccc2/POBI/illumina/calls/POBI_22_illumina.gen.gz > POBI-22.tmp
+/data/oak/project/wtccc2/POBI/illumina/calls/POBI_22_illumina.gen.gz:	 94.4%
+cut -d ' ' -f 2 < MS-22.tmp > /tmp/insect-5552-296747787656
+cut -d ' ' -f 2 < POBI-22.tmp > /tmp/insect-5552-720099268737
+sort /tmp/insect-5552-296747787656 | uniq > /tmp/insect-5552-394861719542
+sort /tmp/insect-5552-720099268737 | uniq > /tmp/insect-5552-429768457261
+comm -12 /tmp/insect-5552-394861719542 /tmp/insect-5552-429768457261 > /tmp/insect-5552-39014865533
+match /tmp/insect-5552-39014865533 < /tmp/insect-5552-296747787656 > /tmp/insect-5552-203759455301
+match /tmp/insect-5552-39014865533 < /tmp/insect-5552-720099268737 > /tmp/insect-5552-922824681739
+paste /tmp/insect-5552-203759455301 /tmp/insect-5552-203759455301 | sort -n -k 1 | cut -f 2 > /tmp/insect-5552-803642599627
+paste /tmp/insect-5552-203759455301 /tmp/insect-5552-922824681739 | sort -n -k 1 | cut -f 2 > /tmp/insect-5552-459908440033
+lines -f /tmp/insect-5552-803642599627 < MS-22.tmp > insect_out/MS-22.tmp.insect
+lines -f /tmp/insect-5552-459908440033 < POBI-22.tmp > insect_out/POBI-22.tmp.insect
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Concatenating chromosomes
+
+cat insect_out/MS-* > MS.gen
+cat insect_out/POBI-* > POBI.gen
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Excluding individuals
+
+cat /data/oak/project/wtccc2/MS/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > MS.xids
+sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | match MS.xids > MS.xidx
+MS: 2 excluded individuals not recognised
+grep -vF NA MS.xidx | sort -n > tmp && mv tmp MS.xidx
+columns -s -v -f MS.xidx < MS.gen > MSx.gen
+sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file MS.xidx > MSx.ids
+rm MS.gen
+mv MS.sample MSx.sample
+cat /data/oak/project/wtccc2/POBI/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > POBI.xids
+sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | match POBI.xids > POBI.xidx
+POBI: 5565 excluded individuals not recognised
+grep -vF NA POBI.xidx | sort -n > tmp && mv tmp POBI.xidx
+columns -s -v -f POBI.xidx < POBI.gen > POBIx.gen
+sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file POBI.xidx > POBIx.ids
+rm POBI.gen
+mv POBI.sample POBIx.sample
+#+end_example
+
+* TODO Prepare data set for phasing
+:PROPERTIES:
+:session: *R-PoBI*
+:dir: /davison@oak.well.ox.ac.uk:bench
+:END:
+** Environment
+#+begin_src R
+  PATH <- "/home/davison/src/shellfish/bin"
+  
+  chroms <- 1:22
+  nwtccc2 <- 8267
+  wfile <- function(chr) sprintf("data/POBI+MS/%02d-allx.gen", chr)
+  wrfile <- function(chr) sprintf("POBI+MS-%02dr.gen", chr)
+  wflippedfile <- function(chr) sprintf("data/POBI+MS/%02d-allx-flipped.gen", chr)
+  wlinesfile <- function(chr) sprintf("%02d.lines", chr)
+  wfreqfile <- function(chr) sprintf("%02d-w.freq", chr)
+  
+  hapfile <- function(chr) sprintf("data/HM3/CEU+TSI.chr%d.hap", chr)
+  hlinesfile <- function(chr) sprintf("%02d.h.lines", chr)
+  hfreqfile <- function(chr) sprintf("%02d-h.freq", chr)
+  hfile <- function(chr) sprintf("data/HM3/hapmap3.r2.b36.chr%d.legend", chr)
+  hrfile <- function(chr) sprintf("hapmap3-%02dr.gen", chr)
+  flipindfile <- function(chr) sprintf("%s.flipind", chr)
+  
+  h <- lapply(hfile(chroms), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
+  w <- lapply(chroms, function(chr)
+              read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", wfile(chr))),
+                         header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
+  names(h) <- names(w) <- sprintf("%02d", chroms)
+  
+  d <- data.frame(row.names=chroms)
+  d$Lh <- sapply(h, nrow)
+  d$Lw <- sapply(w, nrow)
+  d$hinw <- mapply(function(h, w) sum(h$rs %in% w$rs), h, w, SIMPLIFY=FALSE)
+  d$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), h, w, SIMPLIFY=FALSE)
+#+end_src
+** Restrict WTCCC2 to intersection of SNPs with HapMap3
+We're going to flip WTCCC2 to match HapMap3
+#+begin_src R
+  ## intersect and order by HapMap physical position
+  isect <- mapply(merge, h, w, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
+  isect <- lapply(isect, function(d) d[order(d$pos.x),])
+  
+  ## Write line indices for WTCCC2 and create restricted file
+  for(c in chroms) {
+      map <- match(w[[c]]$rs, isect[[c]]$rs)
+      w[[c]]$inisect <- inisect <- !is.na(map)
+      cat(map[inisect], sep="\n", file=wlinesfile(c))
+      cmd <- sprintf("%s/lines -f %s < %s > %s", PATH, wlinesfile(c), wfile(c), wrfile(c))
+      print(cmd)
+      system(cmd)
+  }
+  
+  ## Write line indices for HapMap3 and create restricted file
+  for(c in chroms) {
+      map <- match(h[[c]]$rs, isect[[c]]$rs)
+      h[[c]]$inisect <- inisect <- !is.na(map)
+      cat(map[inisect], sep="\n", file=hlinesfile(c))
+      cmd <- sprintf("%s/lines -f %s < %s > %s", PATH, hlinesfile(c), hfile(c), hrfile(c))
+      print(cmd)
+      system(cmd)
+  }
+#+end_src
+** Flip the WTCCC2 genotypes to match HapMap3 strand
+*** Construct flip indicator files
+#+begin_src R
+  flipind <- function(df) {
+      tmpf <- tempfile()
+      alleles <- df[,c("a0.x", "a1.x","a0.y","a1.y")]
+      ind <- rep(4, nrow(alleles))
+      ok <- apply(alleles, 1, function(a) all(a %in% c("A","C","G","T")))
+      write.table(alleles[ok,], file=tmpf, quote=FALSE, row.names=FALSE, col.names=FALSE)
+      ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, tmpf)), what=integer())
+      ind
+  }
+  
+  for(chr in names(isect)) {
+      ## isect[[chr]]$flipind <- flipind(isect[[chr]])
+      cat(flipind(isect[[chr]]), file=flipindfile(chr), sep="\n")
+  }
+#+end_src
+*** Flip
+#+begin_src R
+  for(chr in rev(chroms)) {
+    cmd <- sprintf("%s/%s -i %s -n %02d < %s > %s",
+    PATH, "flipgen", flipindfile(chr), nwtccc2, wrfile(chr), wflippedfile(chr))
+    print(cmd)
+    system(cmd)
+  }
+#+end_src
+** Check allele frequencies
+#+begin_src sh
+# wfile(22)  
+sstat -p -n 8267 < data/POBI+MS/22-allx-flipped.gen > 22-w.freq
+#+end_src
+
+#+begin_src R
+  freq <- lapply(chroms, list)
+  for(c in 22) {
+      ## Read in hapmap haplotypes in intersection
+      p <- pipe(sprintf("%s/%s -f %s < %s", PATH, "lines", hlinesfile(c), hapfile(c)))
+      freq[[c]]$h <- colMeans(matrix(scan(p, what=integer()), nrow=410))
+      cat(freq[[c]]$h, sep="\n", file=hfreqfile(c))
+      
+      ## Create w freq file
+      cmd <- sprintf("%s/lines -f %s < %s | %s/sstat -p -n 8267 > %s", PATH, wlinesfile(c), wfile(c), PATH, wfreqfile(c))
+      print(cmd)
+      system(cmd)
+      freq[[c]]$w <- scan(wfreqfile(c))
+  
+      png(file=sprintf("%02d-freqs.png", c))
+      plot(freq[[c]]$h, freq[[c]]$w)
+      dev.off()
+  }
+#+end_src
+* TODO Phasing
+* PCA
+#+begin_src sh
+  cd data/POBI+MS
+  python ~/src/wtccc2/wtccc2-analyse/wtccc2-analyse.py \
+      --pca --platform illumina \
+      --cohorts 'MS POBI' --exclude ../MS/exclusions.all \
+      --outfile MS-POBI-pca-
+#+end_src
+
+* Synchronise
+#+begin_src sh :results output
+  rsync -auvz --delete data/MS/ $cetus:data/MS/ && rsync -auvz --delete data/MS/ $oak:data/MS/
+#+end_src
+
+#+results:
+: building file list ... done
+: 
+: sent 314 bytes  received 20 bytes  668.00 bytes/sec
+: total size is 612863  speedup is 1834.92
+: sending incremental file list
+: 
+: sent 284 bytes  received 13 bytes  198.00 bytes/sec
+: total size is 612863  speedup is 2063.51
