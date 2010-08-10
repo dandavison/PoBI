@@ -217,9 +217,9 @@ We're going to flip WTCCC2 to match HapMap3
   ## Write line indices for WTCCC2 and create restricted file
   for(c in chroms) {
       for(d in c("w","h")) {
-          map <- match(dd[[d]][[c]]$rs, isect[[c]]$rs)
-          dd[[d]][[c]]$inisect <- inisect <- !is.na(map)
-          cat(map[inisect], sep="\n", file=linesfile(c, d))
+          map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
+          stopifnot(!is.na(map))
+          cat(map, sep="\n", file=linesfile(c, d))
           cmd <- paste(file.path(PATH, "lines"),
                        "-f", linesfile(c, d),
                        "<", if(d == "w") datafile(c, "w")  else legendfile(c, "h"),
