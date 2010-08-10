@@ -180,7 +180,9 @@ mv POBI.sample POBIx.sample
   hfile <- function(chr) sprintf("data/HM3/hapmap3.r2.b36.chr%d.legend", chr)
   hrfile <- function(chr) sprintf("hapmap3-%02dr.gen", chr)
   flipindfile <- function(chr) sprintf("%s.flipind", chr)
-  
+#+end_src
+
+#+begin_src R :results silent
   h <- lapply(hfile(chroms), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
   w <- lapply(chroms, function(chr)
               read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", wfile(chr))),
