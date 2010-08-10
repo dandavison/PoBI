@@ -163,31 +163,30 @@ mv POBI.sample POBIx.sample
 :dir: /davison@oak.well.ox.ac.uk:bench
 :END:
 ** Environment
-#+begin_src R
+#+begin_src R :results silent
   PATH <- "/home/davison/src/shellfish/bin"
   
-  chroms <- 1:22
+  chroms <- sprintf("%02d", 22)
   nwtccc2 <- 8267
-  wfile <- function(chr) sprintf("data/POBI+MS/%02d-allx.gen", chr)
-  wrfile <- function(chr) sprintf("POBI+MS-%02dr.gen", chr)
-  wflippedfile <- function(chr) sprintf("data/POBI+MS/%02d-allx-flipped.gen", chr)
-  wlinesfile <- function(chr) sprintf("%02d.lines", chr)
-  wfreqfile <- function(chr) sprintf("%02d-w.freq", chr)
+  wfile <- function(chr) sprintf("data/POBI+MS/%s-allx.gen", chr)
+  wrfile <- function(chr) sprintf("POBI+MS-%sr.gen", chr)
+  wflippedfile <- function(chr) sprintf("data/POBI+MS/%s-allx-flipped.gen", chr)
+  wlinesfile <- function(chr) sprintf("%s.lines", chr)
+  wfreqfile <- function(chr) sprintf("%s-w.freq", chr)
   
-  hapfile <- function(chr) sprintf("data/HM3/CEU+TSI.chr%d.hap", chr)
-  hlinesfile <- function(chr) sprintf("%02d.h.lines", chr)
-  hfreqfile <- function(chr) sprintf("%02d-h.freq", chr)
-  hfile <- function(chr) sprintf("data/HM3/hapmap3.r2.b36.chr%d.legend", chr)
-  hrfile <- function(chr) sprintf("hapmap3-%02dr.gen", chr)
+  hapfile <- function(chr) sprintf("data/HM3/CEU+TSI.chr%d.hap", as.integer(chr))
+  hlinesfile <- function(chr) sprintf("%s.h.lines", chr)
+  hfreqfile <- function(chr) sprintf("%s-h.freq", chr  hfile <- function(chr) sprintf("data/HM3/hapmap3.r2.b36.chr%d.legend", as.integer(chr))
+  hrfile <- function(chr) sprintf("hapmap3-%sr.gen", chr)
   flipindfile <- function(chr) sprintf("%s.flipind", chr)
 #+end_src
 
-#+begin_src R :results silent
+ #+begin_src R :results silent
   h <- lapply(hfile(chroms), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
   w <- lapply(chroms, function(chr)
               read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", wfile(chr))),
                          header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
-  names(h) <- names(w) <- sprintf("%02d", chroms)
+  names(h) <- names(w) <- chroms
   
   d <- data.frame(row.names=chroms)
   d$Lh <- sapply(h, nrow)
@@ -195,6 +194,7 @@ mv POBI.sample POBIx.sample
   d$hinw <- mapply(function(h, w) sum(h$rs %in% w$rs), h, w, SIMPLIFY=FALSE)
   d$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), h, w, SIMPLIFY=FALSE)
 #+end_src
+** 
 ** Restrict WTCCC2 to intersection of SNPs with HapMap3
 We're going to flip WTCCC2 to match HapMap3
 #+begin_src R
@@ -222,6 +222,10 @@ We're going to flip WTCCC2 to match HapMap3
       system(cmd)
   }
 #+end_src
+
+#+results[c732f9f10ccf26d95564fb1331a99b9f3bad4ea1]:
+: 0
+
 ** Flip the WTCCC2 genotypes to match HapMap3 strand
 *** Construct flip indicator files
 #+begin_src R
@@ -250,14 +254,9 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 ** Check allele frequencies
-#+begin_src sh
-# wfile(22)  
-sstat -p -n 8267 < data/POBI+MS/22-allx-flipped.gen > 22-w.freq
-#+end_src
-
 #+begin_src R
   freq <- lapply(chroms, list)
-  for(c in 22) {
+  for(c in chroms) {
       ## Read in hapmap haplotypes in intersection
       p <- pipe(sprintf("%s/%s -f %s < %s", PATH, "lines", hlinesfile(c), hapfile(c)))
       freq[[c]]$h <- colMeans(matrix(scan(p, what=integer()), nrow=410))
@@ -269,11 +268,15 @@ sstat -p -n 8267 < data/POBI+MS/22-allx-flipped.gen > 22-w.freq
       system(cmd)
       freq[[c]]$w <- scan(wfreqfile(c))
   
-      png(file=sprintf("%02d-freqs.png", c))
+      png(file=sprintf("%s-freqs.png", c))
       plot(freq[[c]]$h, freq[[c]]$w)
       dev.off()
   }
 #+end_src
+
+#+results[0f6a027f776f4f14e8147e64bccf1b4a80726420]:
+: 1
+
 * TODO Phasing
 * PCA
 #+begin_src sh
