@@ -1,7 +1,7 @@
 #+title:A genome-wide perspective on the peopling of the British Isles
 #+author:Dan, Chris, Garrett, Peter et al.
 
-#+babel: :dir /davison@oak.well.ox.ac.uk:bench :cache yes
+#+babel: :dir /davison@oak.well.ox.ac.uk:bench
 
 * Environment
 ** Org
@@ -161,7 +161,6 @@ mv POBI.sample POBIx.sample
 :PROPERTIES:
 :session: *R-PoBI*
 :dir: /davison@oak.well.ox.ac.uk:bench
-:results: silent
 :END:
 ** Environment
 #+begin_src R
@@ -210,6 +209,9 @@ mv POBI.sample POBIx.sample
   df$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), dd$h, dd$w, SIMPLIFY=FALSE)
 #+end_src
 
+#+results:
+: 7635
+
 ** Restrict to intersection
 We're going to flip WTCCC2 to match HapMap3
 #+begin_src R
@@ -243,6 +245,9 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 
+#+results:
+: 0
+
 ** Flip the WTCCC2 genotypes to match HapMap3 strand
 *** Construct flip indicator files
 #+begin_src R
@@ -272,6 +277,10 @@ We're going to flip WTCCC2 to match HapMap3
     system(cmd)
   }
 #+end_src
+
+#+results:
+: 0
+
 ** Check allele frequencies
 #+begin_src R
    freq <- lapply(chroms, list)
@@ -292,21 +301,61 @@ We're going to flip WTCCC2 to match HapMap3
    }
 #+end_src
 
+#+results:
+: 1
+
 Functions to compute frequency of allele 0
 #+begin_src R
-  wfrequency <- function(i) {
+  wfrequency <- function(c, i) {
       w <- scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
-                             i, i, rdatafile(22, "w"))),
+                             i, i, rdatafile(c, "w"))),
                 quiet=TRUE, what="")
       wg <- matrix(as.numeric(w[6:length(w)]), nrow=3)
       mean(t(0:2) %*% wg) / 2
   }
   
-  hfrequency <- function(i)
+  hfrequency <- function(c, i)
       1 - mean(scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
-                                 i, i, rdatafile(22, "h"))),
+                                 i, i, rdatafile(c, "h"))),
                     quiet=TRUE, what=integer()))
 #+end_src
+** Check
+#+tblname: rsids
+| SNP       |
+|-----------|
+| rs5747968 |
+| rs2236639 |
+| rs9605028 |
+
+#+source: check-SNPs(rsids=rsids)
+#+begin_src R :results insert value :colnames yes
+  check.snp <- function(rs, c) {
+      idx <- which(isect[[c]]$rs == rs)
+      pipe.w <- function(c)
+          pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f4-5",
+                       idx, idx, rdatafile(c, "w")))
+      pipe.h <- function(c)
+          pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f3-4",
+                       idx, idx, rlegendfile(c, "h")))
+      
+      data.frame(rs = rs,
+                 chr = c,
+                 alleles.w = paste(scan(pipe.w(c), what=""), collapse="/"),
+                 alleles.h = paste(scan(pipe.h(c), what=""), collapse="/"),
+                 freq.w = round(wfrequency(c, idx), 2),
+                 freq.h = round(hfrequency(c, idx), 2))
+  }
+  
+  do.call("rbind", lapply(rsids[,1], check.snp, "22"))
+#+end_src
+
+#+results: check-SNPs
+| rs        | chr | alleles.w | alleles.h | freq.w | freq.h |
+|-----------+-----+-----------+-----------+--------+--------|
+| rs5747968 |  22 | A/C       | T/G       |   0.33 |   0.69 |
+| rs2236639 |  22 | A/G       | G/A       |   0.92 |   0.95 |
+| rs9605028 |  22 | A/G       | A/G       |   0.05 |   0.95 |
+
 
 * TODO Phasing
 * PCA
