@@ -210,16 +210,44 @@ mv POBI.sample POBIx.sample
 
 ** Restrict to intersection
 We're going to flip WTCCC2 to match HapMap3
-#+begin_src R
-  isect <- mapply(merge, dd$h, dd$w, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
+#+begin_src R  isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
   isect <- lapply(isect, function(i) i[order(i$pos.x),])
   
   ## Write line indices for WTCCC2 and create restricted file
   for(c in chroms) {
       for(d in c("w","h")) {
           map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
+          lfile <- linesfile(c, d)
+          if(d == "h") {
+              ## legend file has header
+              lfile <- tempfile()
+              cat(map+1, sep="\n", file=lfile)
+          }
           stopifnot(!is.na(map))
-          cat(map, sep="\n", file=linesfile(c, d))
+          cat(map, sep="\n", file=lfile)
+          cmd <- paste(file.path(PATH, "lines"),
+                       "-f", linesfile(c, d),
+                       "<", if(d == "w") datafile(c, "w")  else legendfile(c, "h"),
+                       ">", if(d == "w") rdatafile(c, "w") else rlegendfile(c, "h"))
+          print(cmd)
+          system(cmd)
+      }
+  }
+  isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
+  isect <- lapply(isect, function(i) i[order(i$pos.x),])
+  
+  ## Write line indices for WTCCC2 and create restricted file
+  for(c in chroms) {
+      for(d in c("w","h")) {
+          map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
+          lfile <- linesfile(c, d)
+          if(d == "h") {
+              ## legend file has header
+              lfile <- tempfile()
+              cat(map+1, sep="\n", file=lfile)
+          }
+          stopifnot(!is.na(map))
+          cat(map, sep="\n", file=lfile)
           cmd <- paste(file.path(PATH, "lines"),
                        "-f", linesfile(c, d),
                        "<", if(d == "w") datafile(c, "w")  else legendfile(c, "h"),
