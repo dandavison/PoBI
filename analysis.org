@@ -166,7 +166,7 @@ mv POBI.sample POBIx.sample
 ** Environment
 #+begin_src R
   PATH <- "/home/davison/src/shellfish/bin"
-  system("mkdir -p rdata rlegend flipind frdata freq lines")
+  system("mkdir -p rdata rlegend flipind flipinput frdata freq lines")
   
   chroms <- sprintf("%02d", 22)
   nwtccc2 <- 8267
@@ -191,6 +191,8 @@ mv POBI.sample POBIx.sample
       sprintf("freq/%s-%s.freq", dataset, chr)
   flipindfile <- function(chr, dataset)
       sprintf("flipind/%s-%s.flip", dataset, chr)
+  flipinputfile <- function(chr, dataset)
+      sprintf("flipinput/%s-%s.flip", dataset, chr)
 #+end_src
 
 #+begin_src R
@@ -210,29 +212,7 @@ mv POBI.sample POBIx.sample
 
 ** Restrict to intersection
 We're going to flip WTCCC2 to match HapMap3
-#+begin_src R  isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
-  isect <- lapply(isect, function(i) i[order(i$pos.x),])
-  
-  ## Write line indices for WTCCC2 and create restricted file
-  for(c in chroms) {
-      for(d in c("w","h")) {
-          map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
-          lfile <- linesfile(c, d)
-          if(d == "h") {
-              ## legend file has header
-              lfile <- tempfile()
-              cat(map+1, sep="\n", file=lfile)
-          }
-          stopifnot(!is.na(map))
-          cat(map, sep="\n", file=lfile)
-          cmd <- paste(file.path(PATH, "lines"),
-                       "-f", linesfile(c, d),
-                       "<", if(d == "w") datafile(c, "w")  else legendfile(c, "h"),
-                       ">", if(d == "w") rdatafile(c, "w") else rlegendfile(c, "h"))
-          print(cmd)
-          system(cmd)
-      }
-  }
+#+begin_src R
   isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
   isect <- lapply(isect, function(i) i[order(i$pos.x),])
   
@@ -240,20 +220,25 @@ We're going to flip WTCCC2 to match HapMap3
   for(c in chroms) {
       for(d in c("w","h")) {
           map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
-          lfile <- linesfile(c, d)
+          cat(map, sep="\n", file=linesfile(c, d))
+          stopifnot(!is.na(map))
+          cmd <- paste(file.path(PATH, "lines"),
+                       "-f", linesfile(c, d),
+                       "<", datafile(c, d),
+                       ">", rdatafile(c, d))
+          print(cmd)
+          system(cmd)
           if(d == "h") {
               ## legend file has header
               lfile <- tempfile()
               cat(map+1, sep="\n", file=lfile)
+              cmd <- paste(file.path(PATH, "lines"),
+                           "-f", lfile,
+                           "<", legendfile(c, "h"),
+                           ">", rlegendfile(c, "h"))
+              print(cmd)
+              system(cmd)
           }
-          stopifnot(!is.na(map))
-          cat(map, sep="\n", file=lfile)
-          cmd <- paste(file.path(PATH, "lines"),
-                       "-f", linesfile(c, d),
-                       "<", if(d == "w") datafile(c, "w")  else legendfile(c, "h"),
-                       ">", if(d == "w") rdatafile(c, "w") else rlegendfile(c, "h"))
-          print(cmd)
-          system(cmd)
       }
   }
 #+end_src
@@ -261,19 +246,19 @@ We're going to flip WTCCC2 to match HapMap3
 ** Flip the WTCCC2 genotypes to match HapMap3 strand
 *** Construct flip indicator files
 #+begin_src R
-  flipind <- function(df) {
-      tmpf <- tempfile()
-      on.exit(file.remove(tmpf))
+  flipind <- function(df, file) {
       alleles <- df[,c("a0.x", "a1.x","a0.y","a1.y")]
       ind <- rep(4, nrow(alleles))
       ok <- apply(alleles, 1, function(a) all(a %in% c("A","C","G","T")))
-      write.table(alleles[ok,], file=tmpf, quote=FALSE, row.names=FALSE, col.names=FALSE)
-      ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, tmpf)), what=integer())
+      write.table(alleles[ok,], file=file, quote=FALSE, row.names=FALSE, col.names=FALSE)
+      ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, file)), what=integer())
       ind
   }
   
   for(c in chroms)
-      cat(flipind(isect[[c]]), file=flipindfile(c, "w"), sep="\n")
+      for(d in "w") {
+          cat(flipind(isect[[c]], flipinputfile(c, d)), file=flipindfile(c, d), sep="\n")
+      }
 #+end_src
 *** Flip WTCCC2 PoBI+MS
 #+begin_src R
@@ -289,23 +274,38 @@ We're going to flip WTCCC2 to match HapMap3
 #+end_src
 ** Check allele frequencies
 #+begin_src R
-  freq <- lapply(chroms, list)
-  for(c in chroms) {
-      ## Read in hapmap haplotypes in intersection
-      p <- pipe(sprintf("%s/%s -f %s < %s", PATH, "lines", linesfile(c,"h"), datafile(c, "h")))
-      freq[[c]]$h <- colMeans(matrix(scan(p, what=integer()), nrow=410))
-      cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
-      
-      ## Create w freq file
-      cmd <- sprintf("%s/lines -f %s < %s | %s/sstat -p -n 8267 > %s", PATH, linesfile(c,"w"), datafile(c,"w"), PATH, freqfile(c,"w"))
-      print(cmd)
-      system(cmd)
-      freq[[c]]$w <- scan(freqfile(c,"w"))
-  
-      png(file=sprintf("%s-freqs.png", c))
-      plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
-      dev.off()
+   freq <- lapply(chroms, list)
+   for(c in chroms) {
+       ## Read in hapmap haplotypes in intersection
+       freq[[c]]$h <- 1 - colMeans(matrix(scan(rdatafile(c, "h"), what=integer()), nrow=410))
+       cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
+       
+       ## Create w freq file
+       cmd <- sprintf("%s/sstat -p -n 8267 < %s > %s", PATH, rdatafile(c,"w"), freqfile(c,"w"))
+       print(cmd)
+       system(cmd)
+       freq[[c]]$w <- scan(freqfile(c,"w"))
+   
+       png(file=sprintf("%s-freqs.png", c))
+       plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
+       dev.off()
+   }
+#+end_src
+
+Functions to compute frequency of allele 0
+#+begin_src R
+  wfrequency <- function(i) {
+      w <- scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
+                             i, i, rdatafile(22, "w"))),
+                quiet=TRUE, what="")
+      wg <- matrix(as.numeric(w[6:length(w)]), nrow=3)
+      mean(t(0:2) %*% wg) / 2
   }
+  
+  hfrequency <- function(i)
+      1 - mean(scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
+                                 i, i, rdatafile(22, "h"))),
+                    quiet=TRUE, what=integer()))
 #+end_src
 
 * TODO Phasing
