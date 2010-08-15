@@ -1,7 +1,9 @@
-#+title:A genome-wide perspective on the peopling of the British Isles
-#+author:Dan, Chris, Garrett, Peter et al.
+#+title: A genome-wide perspective on the peopling of the British Isles
+#+author: Dan, Chris, Garrett, Peter et al.
 
-#+babel: :dir /davison@oak.well.ox.ac.uk:bench
+#+babel: :dir /davison@oak.well.ox.ac.uk:~/bench
+#+options: ^:{}
+
 
 * Environment
 ** Org
@@ -89,9 +91,6 @@ wc -l data/MS/exclusions.all
 | 5565 | unique                                          |
 | 5565 | data/MS/exclusions.all                          |
 * DONE Create combined POBI+MS data set
-:PROPERTIES:
-:dir: /davison@oak.well.ox.ac.uk:bench
-:END:
 
 #+begin_src sh
   cd data/POBI+MS
@@ -157,33 +156,44 @@ rm POBI.gen
 mv POBI.sample POBIx.sample
 #+end_example
 
-* TODO Prepare data set for phasing
-:PROPERTIES:
-:session: *R-PoBI*
-:dir: /davison@oak.well.ox.ac.uk:bench
-:END:
+* DONE Prepare data set for phasing
 ** Environment
+#+begin_src sh :eval never
+  cd data/HM3
+  for i in `seq 1 22` ; do
+      ln -s \
+          ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/hapmap3.r2.b36.allMinusPilot1CEU.chr$i.snpfilt.haps \
+          `printf "%02d" $i`.hap
+  
+      ln -s \
+          ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/hapmap3.r2.b36.allMinusPilot1CEU.chr$i.snpfilt.legend \
+          `printf "%02d" $i`.legend
+  done
+#+end_src
+
 #+begin_src R
   PATH <- "/home/davison/src/shellfish/bin"
-  system("mkdir -p rdata rlegend flipind flipinput frdata freq lines")
+  system("mkdir -p img rdata rlegend flipind flipinput frdata freq lines")
   
-  chroms <- sprintf("%02d", 22)
+  chroms <- sprintf("%02d", 1:22)
   nwtccc2 <- 8267
   
   datafile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             h = sprintf("data/HM3/CEU+TSI.chr%d.hap", as.integer(chr)),
-             w = sprintf("data/POBI+MS/%s-allx.gen", chr))
+    switch(match.arg(dataset),
+           h = sprintf("data/HM3/%s.hap", chr),
+           w = sprintf("data/POBI+MS/%s-allx.gen", chr))
   legendfile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             h = sprintf("data/HM3/hapmap3.r2.b36.chr%d.legend", as.integer(chr)),
-             w = error("No need for this"))
+        switch(match.arg(dataset),
+               h = sprintf("data/HM3/%s.legend", chr),
+               w = error("No need for this"))
   rdatafile <- function(chr, dataset)
-      sprintf("rdata/%s-%s.gen", dataset, chr)
+    sprintf("rdata/%s-%s.%s", dataset, chr,
+            if(dataset == "w") "gen" else "hap")
   rlegendfile <- function(chr, dataset)
-      sprintf("rlegend/%s-%s.legend", dataset, chr)
+    sprintf("rlegend/%s-%s.legend", dataset, chr)
   frdatafile <- function(chr, dataset)
-      sprintf("frdata/%s-%s.gen", dataset, chr)
+      sprintf("frdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else "hap")
   linesfile <- function(chr, dataset)
       sprintf("lines/%s-%s.lines", dataset, chr)
   freqfile <- function(chr, dataset)
@@ -198,9 +208,9 @@ mv POBI.sample POBIx.sample
   dd <- list()
   dd$h <- lapply(legendfile(chroms, "h"), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
   dd$w <- lapply(chroms, function(chr)
-              read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", datafile(chr,"w"))),
-                         header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
-  names(dd$h) <- names(dd$w) <- chroms
+                 read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", datafile(chr,"w"))),
+                            header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
+  names(dd$h) <- names(dd$w)  <- chroms
   
   df <- data.frame(row.names=chroms)
   df$Lh <- sapply(dd$h, nrow)
@@ -209,10 +219,7 @@ mv POBI.sample POBIx.sample
   df$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), dd$h, dd$w, SIMPLIFY=FALSE)
 #+end_src
 
-#+results:
-: 7635
-
-** Restrict to intersection
+** DONE Restrict to intersection
 We're going to flip WTCCC2 to match HapMap3
 #+begin_src R
   isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
@@ -245,15 +252,53 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 
+** DONE Check restricted data dimensions
+
+#+begin_src sh :colnames yes
+  printf "chr\thapmap-L\twtccc2-L\thapmap-n\twtccc2-n\n"
+  for i in `seq -w 1 22` ; do
+      h=rdata/h-$i.hap
+      w=rdata/w-$i.gen
+      printf "%02d\t%d\t%d\t%d\t%d\n" \
+          $i \
+          `wc -l < $h` \
+          `wc -l < $w` \
+          `head -n1 $h | wc | awk '{print $2}'` \
+          `~/bin/numindivs-gen $w`
+  done
+#+end_src
+
 #+results:
-: 0
+| chr | hapmap-L | wtccc2-L | hapmap-n | wtccc2-n |
+|   1 |    38977 |    38977 |      410 |     8267 |
+|   2 |    41420 |    41420 |      410 |     8267 |
+|   3 |    34441 |    34441 |      410 |     8267 |
+|   4 |    30084 |    30084 |      410 |     8267 |
+|   5 |    31185 |    31185 |      410 |     8267 |
+|   6 |    33177 |    33177 |      410 |     8267 |
+|   7 |    27372 |    27372 |      410 |     8267 |
+|   0 |    28491 |    28491 |      410 |     8267 |
+|   0 |    24386 |    24386 |      410 |     8267 |
+|  10 |    26922 |    26922 |      410 |     8267 |
+|  11 |    24865 |    24865 |      410 |     8267 |
+|  12 |    24696 |    24696 |      410 |     8267 |
+|  13 |    18973 |    18973 |      410 |     8267 |
+|  14 |    16758 |    16758 |      410 |     8267 |
+|  15 |    15284 |    15284 |      410 |     8267 |
+|  16 |    15627 |    15627 |      410 |     8267 |
+|  17 |    13338 |    13338 |      410 |     8267 |
+|  18 |    15224 |    15224 |      410 |     8267 |
+|  19 |     8656 |     8656 |      410 |     8267 |
+|  20 |    13139 |    13139 |      410 |     8267 |
+|  21 |     7475 |     7475 |      410 |     8267 |
+|  22 |     7635 |     7635 |      410 |     8267 |
 
 ** Flip the WTCCC2 genotypes to match HapMap3 strand
 *** Construct flip indicator files
 #+begin_src R
   flipind <- function(df, file) {
       alleles <- df[,c("a0.x", "a1.x","a0.y","a1.y")]
-      ind <- rep(4, nrow(alleles))
+      ind <- rep(3, nrow(alleles))
       ok <- apply(alleles, 1, function(a) all(a %in% c("A","C","G","T")))
       write.table(alleles[ok,], file=file, quote=FALSE, row.names=FALSE, col.names=FALSE)
       ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, file)), what=integer())
@@ -267,12 +312,17 @@ We're going to flip WTCCC2 to match HapMap3
 #+end_src
 *** Flip WTCCC2 PoBI+MS
 #+begin_src R
-  for(chr in rev(chroms)) {
+  for(c in rev(chroms)) {
     cmd <- sprintf("%s/%s -i %s -n %02d < %s > %s",
                    PATH, "flipgen",
-                   flipindfile(chr, "w"),
-                   nwtccc2, rdatafile(chr, "w"),
-                   frdatafile(chr, "w"))
+                   flipindfile(c, "w"),
+                   nwtccc2,
+                   rdatafile(c, "w"),
+                   frdatafile(c, "w"))
+    print(cmd)
+    ## system(cmd)
+  
+    cmd <- sprintf("ln -s $PWD/%s %s", rdatafile(c, "h"), frdatafile(c, "h"))
     print(cmd)
     system(cmd)
   }
@@ -281,28 +331,128 @@ We're going to flip WTCCC2 to match HapMap3
 #+results:
 : 0
 
-** Check allele frequencies
-#+begin_src R
-   freq <- lapply(chroms, list)
-   for(c in chroms) {
-       ## Read in hapmap haplotypes in intersection
-       freq[[c]]$h <- 1 - colMeans(matrix(scan(rdatafile(c, "h"), what=integer()), nrow=410))
-       cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
-       
-       ## Create w freq file
-       cmd <- sprintf("%s/sstat -p -n 8267 < %s > %s", PATH, rdatafile(c,"w"), freqfile(c,"w"))
-       print(cmd)
-       system(cmd)
-       freq[[c]]$w <- scan(freqfile(c,"w"))
-   
-       png(file=sprintf("%s-freqs.png", c))
-       plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
-       dev.off()
-   }
+** DONE Check flipped data dimensions
+*** DONE Flip indicators
+#+begin_src sh
+  wc -l flipind/*
 #+end_src
 
 #+results:
-: 1
+|  38977 | flipind/w-01.flip |
+|  41420 | flipind/w-02.flip |
+|  34441 | flipind/w-03.flip |
+|  30084 | flipind/w-04.flip |
+|  31185 | flipind/w-05.flip |
+|  33177 | flipind/w-06.flip |
+|  27372 | flipind/w-07.flip |
+|  28491 | flipind/w-08.flip |
+|  24386 | flipind/w-09.flip |
+|  26922 | flipind/w-10.flip |
+|  24865 | flipind/w-11.flip |
+|  24696 | flipind/w-12.flip |
+|  18973 | flipind/w-13.flip |
+|  16758 | flipind/w-14.flip |
+|  15284 | flipind/w-15.flip |
+|  15627 | flipind/w-16.flip |
+|  13338 | flipind/w-17.flip |
+|  15224 | flipind/w-18.flip |
+|   8656 | flipind/w-19.flip |
+|  13139 | flipind/w-20.flip |
+|   7475 | flipind/w-21.flip |
+|   7635 | flipind/w-22.flip |
+| 498125 | total             |
+
+*** DONE Flipped data
+#+begin_src sh :colnames yes
+  printf "chr\thapmap-L\twtccc2-L\thapmap-n\twtccc2-n\n"
+  for i in `seq -w 1 22` ; do
+      h=frdata/h-$i.hap
+      w=frdata/w-$i.gen
+      printf "%02d\t%d\t%d\t%d\t%d\n" \
+          $i \
+          `wc -l < $h` \
+          `wc -l < $w` \
+          `head -n1 $h | wc | awk '{print $2}'` \
+          `~/bin/numindivs-gen $w`
+  done
+#+end_src
+
+#+results:
+| chr | hapmap-L | wtccc2-L | hapmap-n | wtccc2-n |
+|   1 |    38977 |    38977 |      410 |     8267 |
+|   2 |    41420 |    41420 |      410 |     8267 |
+|   3 |    34441 |    34441 |      410 |     8267 |
+|   4 |    30084 |    30084 |      410 |     8267 |
+|   5 |    31185 |    31185 |      410 |     8267 |
+|   6 |    33177 |    33177 |      410 |     8267 |
+|   7 |    27372 |    27372 |      410 |     8267 |
+|   0 |    28491 |    28491 |      410 |     8267 |
+|   0 |    24386 |    24386 |      410 |     8267 |
+|  10 |    26922 |    26922 |      410 |     8267 |
+|  11 |    24865 |    24865 |      410 |     8267 |
+|  12 |    24696 |    24696 |      410 |     8267 |
+|  13 |    18973 |    18973 |      410 |     8267 |
+|  14 |    16758 |    16758 |      410 |     8267 |
+|  15 |    15284 |    15284 |      410 |     8267 |
+|  16 |    15627 |    15627 |      410 |     8267 |
+|  17 |    13338 |    13338 |      410 |     8267 |
+|  18 |    15224 |    15224 |      410 |     8267 |
+|  19 |     8656 |     8656 |      410 |     8267 |
+|  20 |    13139 |    13139 |      410 |     8267 |
+|  21 |     7475 |     7475 |      410 |     8267 |
+|  22 |     7635 |     7635 |      410 |     8267 |
+
+Was:
+
+| chr | hapmap-L | wtccc2-L | hapmap-n | wtccc2-n |
+|   1 |    38977 |    38977 |      410 |     8267 |
+|   2 |    41420 |    30687 |      410 |     8267 |
+|   3 |    34441 |    34441 |      410 |     8267 |
+|   4 |    30084 |    30084 |      410 |     8267 |
+|   5 |    31185 |    31185 |      410 |     8267 |
+|   6 |    33177 |    33177 |      410 |     8267 |
+|   7 |    27372 |    27372 |      410 |     8267 |
+|   0 |    28491 |    28491 |      410 |     8267 |
+|   0 |    24386 |    24386 |      410 |     8267 |
+|  10 |    26922 |    26922 |      410 |     8267 |
+|  11 |    24865 |    24865 |      410 |     8267 |
+|  12 |    24696 |    24696 |      410 |     8267 |
+|  13 |    18973 |    18973 |      410 |     8267 |
+|  14 |    16758 |    16758 |      410 |     8267 |
+|  15 |    15284 |    15284 |      410 |     8267 |
+|  16 |    15627 |    15433 |      410 |     8267 |
+|  17 |    13338 |    13338 |      410 |     8267 |
+|  18 |    15224 |    15224 |      410 |     8267 |
+|  19 |     8656 |     8656 |      410 |     8267 |
+|  20 |    13139 |     5776 |      410 |     8267 |
+|  21 |     7475 |     7475 |      410 |     8267 |
+|  22 |     7635 |     7635 |      410 |     8267 |
+
+** DONE Check allele frequencies
+#+begin_src R
+    freq <- lapply(chroms, list)
+    for(c in rev(chroms)) {
+        nh <- 410 ## 1910 ## 
+        ## Read in hapmap haplotypes in intersection
+        freq[[c]]$h <- 1 - colMeans(matrix(scan(frdatafile(c, "h"), what=integer()), nrow=nh))
+        cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
+        
+        ## Create w freq file
+        cmd <- sprintf("%s/sstat -p -n %d < %s > %s",
+                       PATH, nwtccc2, frdatafile(c,"w"), freqfile(c,"w"))
+        print(cmd)
+        system(cmd)
+        freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
+        cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))   
+    
+        png(file=sprintf("img/%s-freqs.png", c))
+        plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
+        dev.off()
+    }
+#+end_src
+
+#+results:
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 |
 
 Functions to compute frequency of allele 0
 #+begin_src R
@@ -311,7 +461,7 @@ Functions to compute frequency of allele 0
                              i, i, rdatafile(c, "w"))),
                 quiet=TRUE, what="")
       wg <- matrix(as.numeric(w[6:length(w)]), nrow=3)
-      mean(t(0:2) %*% wg) / 2
+      mean(t(2:0) %*% wg) / 2
   }
   
   hfrequency <- function(c, i)
@@ -333,23 +483,49 @@ Functions to compute frequency of allele 0
       idx <- which(isect[[c]]$rs == rs)
       pipe.w <- function(c)
           pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f4-5",
-                       idx, idx, rdatafile(c, "w")))
-      pipe.h <- function(c)
-          pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f3-4",
-                       idx, idx, rlegendfile(c, "h")))
+                         idx, idx, rdatafile(c, "w")))
+        pipe.h <- function(c)
+            pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f3-4",
+                         idx, idx, rlegendfile(c, "h")))
       
-      data.frame(rs = rs,
-                 chr = c,
-                 alleles.w = paste(scan(pipe.w(c), what=""), collapse="/"),
-                 alleles.h = paste(scan(pipe.h(c), what=""), collapse="/"),
-                 freq.w = round(wfrequency(c, idx), 2),
-                 freq.h = round(hfrequency(c, idx), 2))
-  }
-  
-  do.call("rbind", lapply(rsids[,1], check.snp, "22"))
+        data.frame(rs = rs,
+                   chr = c,
+                   alleles.w = paste(scan(pipe.w(c), what=""), collapse="/"),
+                   alleles.h = paste(scan(pipe.h(c), what=""), collapse="/"),
+                   freq.w = round(wfrequency(c, idx), 2),
+                   freq.h = round(hfrequency(c, idx), 2))
+    }
+    
+    do.call("rbind", lapply(rsids[,1], check.snp, "22"))
 #+end_src
 
-#+results: check-SNPs
+| rs        | chr | alleles.w | alleles.h | freq.w | freq.h |
+|-----------+-----+-----------+-----------+--------+--------|
+| rs5747968 |  22 | A/C       | G/T       |   0.67 |   0.22 |
+| rs2236639 |  22 | A/G       | A/G       |   0.08 |   0.15 |
+| rs9605028 |  22 | A/G       | A/G       |   0.95 |   0.95 |
+
+| rs        | chr | alleles.w | alleles.h | freq.w | freq.h |
+|-----------+-----+-----------+-----------+--------+--------|
+| rs5747968 |  22 | A/C       | T/G       |   0.67 |   0.69 |
+| rs2236639 |  22 | A/G       | G/A       |   0.08 |   0.95 |
+| rs9605028 |  22 | A/G       | A/G       |   0.95 |   0.95 |
+| rs        | chr | alleles.w | alleles.h | freq.w | freq.h |
+|-----------+-----+-----------+-----------+--------+--------|
+| rs5747968 |  22 | A/C       | T/G       |   0.67 |   0.69 |
+| rs2236639 |  22 | A/G       | G/A       |   0.08 |   0.95 |
+| rs9605028 |  22 | A/G       | A/G       |   0.95 |   0.95 |
+
+#+results: check-SNPs (hapmap3+1kG)
+| rs        | chr | alleles.w | alleles.h | freq.w | freq.h |
+|-----------+-----+-----------+-----------+--------+--------|
+| rs5747968 |  22 | A/C       | G/T       |   0.33 |   0.22 |
+| rs2236639 |  22 | A/G       | A/G       |   0.92 |   0.15 |
+| rs9605028 |  22 | A/G       | A/G       |   0.05 |   0.95 |
+
+
+
+# hapmap3
 | rs        | chr | alleles.w | alleles.h | freq.w | freq.h |
 |-----------+-----+-----------+-----------+--------+--------|
 | rs5747968 |  22 | A/C       | T/G       |   0.33 |   0.69 |
@@ -357,6 +533,639 @@ Functions to compute frequency of allele 0
 | rs9605028 |  22 | A/G       | A/G       |   0.05 |   0.95 |
 
 
+- HapMap website says rs2236639 has A allele CEU frequency .084.
+- a0,a1 means a0 <-> 0, a1 <-> 1
+- So HapMap frequencies are 1 - mean(hap)
+- WTCCC2 frequencies are c(2,1,0) %*% genop
+
+
+
+| rs#       | chrom |      pos | strand | build    | ref_allele | ref-allele_freq | ref-allele_count | other_allele | other-freq | other-allele_count |
+| rs2236639 | chr22 | 15452483 | +      | ncbi_b36 | A          |           0.084 |               19 | G            |      0.916 |                207 |
+
+** Session transcript
+#+begin_src ess-transcript
+> PATH <- "/home/davison/src/shellfish/bin"
+system("mkdir -p img rdata rlegend flipind flipinput frdata freq lines")
+
+chroms <- sprintf("%02d", 1:22)
+nwtccc2 <- 8267
+
+datafile <- function(chr, dataset=c("h","w"))
+    switch(match.arg(dataset),
+           h = sprintf("data/HM3/%s.hap", chr),
+           w = sprintf("data/POBI+MS/%s-allx.gen", chr))
+legendfile <- function(chr, dataset=c("h","w"))
+    switch(match.arg(dataset),
+           h = sprintf("data/HM3/%s.legend", chr),
+           w = error("No need for this"))
+rdatafile <- function(chr, dataset)
+    sprintf("rdata/%s-%s.gen", dataset, chr)
+rlegendfile <- function(chr, dataset)
+    sprintf("rlegend/%s-%s.legend", dataset, chr)
+frdatafile <- function(chr, dataset)
+    sprintf("frdata/%s-%s.gen", dataset, chr)
+linesfile <- function(chr, dataset)
+    sprintf("lines/%s-%s.lines", dataset, chr)
+freqfile <- function(chr, dataset)
+    sprintf("freq/%s-%s.freq", dataset, chr)
+flipindfile <- function(chr, dataset)
+    sprintf("flipind/%s-%s.flip", dataset, chr)
+flipinputfile <- function(chr, dataset)
+    sprintf("flipinput/%s-%s.flip", dataset, chr)
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484oEd")
+'org_babel_R_eoe'
+PATH <- "/home/davison/src/shellfish/bin"
+> system("mkdir -p img rdata rlegend flipind flipinput frdata freq lines")
+> 
+> chroms <- sprintf("%02d", 1:22)
+> nwtccc2 <- 8267
+> 
+> datafile <- function(chr, dataset=c("h","w"))
++     switch(match.arg(dataset),
++            h = sprintf("data/HM3/%s.hap", chr),
++            w = sprintf("data/POBI+MS/%s-allx.gen", chr))
+> legendfile <- function(chr, dataset=c("h","w"))
++     switch(match.arg(dataset),
++            h = sprintf("data/HM3/%s.legend", chr),
++            w = error("No need for this"))
+> rdatafile <- function(chr, dataset)
++     sprintf("rdata/%s-%s.gen", dataset, chr)
+> rlegendfile <- function(chr, dataset)
++     sprintf("rlegend/%s-%s.legend", dataset, chr)
+> frdatafile <- function(chr, dataset)
++     sprintf("frdata/%s-%s.gen", dataset, chr)
+> linesfile <- function(chr, dataset)
++     sprintf("lines/%s-%s.lines", dataset, chr)
+> freqfile <- function(chr, dataset)
++     sprintf("freq/%s-%s.freq", dataset, chr)
+> flipindfile <- function(chr, dataset)
++     sprintf("flipind/%s-%s.flip", dataset, chr)
+> flipinputfile <- function(chr, dataset)
++     sprintf("flipinput/%s-%s.flip", dataset, chr)
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484oEd")
+Error in as.data.frame.default(x[[i]], optional = TRUE) : 
+  cannot coerce class "function" into a data.frame
+Error in { : 
+  Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> dd <- list()
+dd$h <- lapply(legendfile(chroms, "h"), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
+dd$w <- lapply(chroms, function(chr)
+            read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", datafile(chr,"w"))),
+                       header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
+names(dd$h) <- names(dd$w) <- chroms
+
+df <- data.frame(row.names=chroms)
+df$Lh <- sapply(dd$h, nrow)
+df$Lw <- sapply(dd$w, nrow)
+df$hinw <- mapply(function(h, w) sum(h$rs %in% w$rs), dd$h, dd$w, SIMPLIFY=FALSE)
+df$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), dd$h, dd$w, SIMPLIFY=FALSE)
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R14841Oj")
+'org_babel_R_eoe'
+dd <- list()
+> dd$h <- lapply(legendfile(chroms, "h"), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
+Warning message:
+closing unused connection 4 (/home/davison/src/shellfish/bin/flipind < flipinput/w-22.flip) 
+> dd$w <- lapply(chroms, function(chr)
++             read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", datafile(chr,"w"))),
++                        header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
+> names(dd$h) <- names(dd$w) <- chroms
+> 
+> df <- data.frame(row.names=chroms)
+> df$Lh <- sapply(dd$h, nrow)
+> df$Lw <- sapply(dd$w, nrow)
+> df$hinw <- mapply(function(h, w) sum(h$rs %in% w$rs), dd$h, dd$w, SIMPLIFY=FALSE)
+> df$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), dd$h, dd$w, SIMPLIFY=FALSE)
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R14841Oj")
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
+isect <- lapply(isect, function(i) i[order(i$pos.x),])
+
+## Write line indices for WTCCC2 and create restricted file
+for(c in chroms) {
+    for(d in c("w","h")) {
+        map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
+        cat(map, sep="\n", file=linesfile(c, d))
+        stopifnot(!is.na(map))
+        cmd <- paste(file.path(PATH, "lines"),
+                     "-f", linesfile(c, d),
+                     "<", datafile(c, d),
+                     ">", rdatafile(c, d))
+        print(cmd)
+        system(cmd)
+        if(d == "h") {
+            ## legend file has header
+            lfile <- tempfile()
+            cat(map+1, sep="\n", file=lfile)
+            cmd <- paste(file.path(PATH, "lines"),
+                         "-f", lfile,
+                         "<", legendfile(c, "h"),
+                         ">", rlegendfile(c, "h"))
+            print(cmd)
+            system(cmd)
+        }
+    }
+}
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484Pjv")
+'org_babel_R_eoe'
+isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
+> isect <- lapply(isect, function(i) i[order(i$pos.x),])
+> 
+> ## Write line indices for WTCCC2 and create restricted file
+> for(c in chroms) {
++     for(d in c("w","h")) {
++         map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
++         cat(map, sep="\n", file=linesfile(c, d))
++         stopifnot(!is.na(map))
++         cmd <- paste(file.path(PATH, "lines"),
++                      "-f", linesfile(c, d),
++                      "<", datafile(c, d),
++                      ">", rdatafile(c, d))
++         print(cmd)
++         system(cmd)
++         if(d == "h") {
++             ## legend file has header
++             lfile <- tempfile()
++             cat(map+1, sep="\n", file=lfile)
++             cmd <- paste(file.path(PATH, "lines"),
++                          "-f", lfile,
++                          "<", legendfile(c, "h"),
++                          ">", rlegendfile(c, "h"))
++             print(cmd)
++             system(cmd)
++         }
++     }
++ }
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-01.lines < data/POBI+MS/01-allx.gen > rdata/w-01.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-01.lines < data/HM3/01.hap > rdata/h-01.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file737b8ddc < data/HM3/01.legend > rlegend/h-01.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-02.lines < data/POBI+MS/02-allx.gen > rdata/w-02.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-02.lines < data/HM3/02.hap > rdata/h-02.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file6ceaf087 < data/HM3/02.legend > rlegend/h-02.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-03.lines < data/POBI+MS/03-allx.gen > rdata/w-03.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-03.lines < data/HM3/03.hap > rdata/h-03.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file22221a70 < data/HM3/03.legend > rlegend/h-03.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-04.lines < data/POBI+MS/04-allx.gen > rdata/w-04.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-04.lines < data/HM3/04.hap > rdata/h-04.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file4516dde9 < data/HM3/04.legend > rlegend/h-04.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-05.lines < data/POBI+MS/05-allx.gen > rdata/w-05.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-05.lines < data/HM3/05.hap > rdata/h-05.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file3006c83e < data/HM3/05.legend > rlegend/h-05.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-06.lines < data/POBI+MS/06-allx.gen > rdata/w-06.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-06.lines < data/HM3/06.hap > rdata/h-06.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file614fd4a1 < data/HM3/06.legend > rlegend/h-06.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-07.lines < data/POBI+MS/07-allx.gen > rdata/w-07.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-07.lines < data/HM3/07.hap > rdata/h-07.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file419ac241 < data/HM3/07.legend > rlegend/h-07.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-08.lines < data/POBI+MS/08-allx.gen > rdata/w-08.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-08.lines < data/HM3/08.hap > rdata/h-08.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file5577f8e1 < data/HM3/08.legend > rlegend/h-08.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-09.lines < data/POBI+MS/09-allx.gen > rdata/w-09.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-09.lines < data/HM3/09.hap > rdata/h-09.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file440badfc < data/HM3/09.legend > rlegend/h-09.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-10.lines < data/POBI+MS/10-allx.gen > rdata/w-10.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-10.lines < data/HM3/10.hap > rdata/h-10.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file5072367 < data/HM3/10.legend > rlegend/h-10.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-11.lines < data/POBI+MS/11-allx.gen > rdata/w-11.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-11.lines < data/HM3/11.hap > rdata/h-11.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file3804823e < data/HM3/11.legend > rlegend/h-11.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-12.lines < data/POBI+MS/12-allx.gen > rdata/w-12.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-12.lines < data/HM3/12.hap > rdata/h-12.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file77465f01 < data/HM3/12.legend > rlegend/h-12.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-13.lines < data/POBI+MS/13-allx.gen > rdata/w-13.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-13.lines < data/HM3/13.hap > rdata/h-13.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file7724c67e < data/HM3/13.legend > rlegend/h-13.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-14.lines < data/POBI+MS/14-allx.gen > rdata/w-14.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-14.lines < data/HM3/14.hap > rdata/h-14.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file5c482a97 < data/HM3/14.legend > rlegend/h-14.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-15.lines < data/POBI+MS/15-allx.gen > rdata/w-15.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-15.lines < data/HM3/15.hap > rdata/h-15.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file2463b9ea < data/HM3/15.legend > rlegend/h-15.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-16.lines < data/POBI+MS/16-allx.gen > rdata/w-16.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-16.lines < data/HM3/16.hap > rdata/h-16.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file5e884adc < data/HM3/16.legend > rlegend/h-16.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-17.lines < data/POBI+MS/17-allx.gen > rdata/w-17.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-17.lines < data/HM3/17.hap > rdata/h-17.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file51ead36b < data/HM3/17.legend > rlegend/h-17.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-18.lines < data/POBI+MS/18-allx.gen > rdata/w-18.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-18.lines < data/HM3/18.hap > rdata/h-18.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file2d517796 < data/HM3/18.legend > rlegend/h-18.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-19.lines < data/POBI+MS/19-allx.gen > rdata/w-19.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-19.lines < data/HM3/19.hap > rdata/h-19.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file580bd78f < data/HM3/19.legend > rlegend/h-19.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-20.lines < data/POBI+MS/20-allx.gen > rdata/w-20.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-20.lines < data/HM3/20.hap > rdata/h-20.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file153ea438 < data/HM3/20.legend > rlegend/h-20.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-21.lines < data/POBI+MS/21-allx.gen > rdata/w-21.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-21.lines < data/HM3/21.hap > rdata/h-21.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file3855585c < data/HM3/21.legend > rlegend/h-21.legend"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/w-22.lines < data/POBI+MS/22-allx.gen > rdata/w-22.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f lines/h-22.lines < data/HM3/22.hap > rdata/h-22.gen"
+[1] "/home/davison/src/shellfish/bin/lines -f /tmp/RtmpA15180/file70a64e2a < data/HM3/22.legend > rlegend/h-22.legend"
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484Pjv")
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> flipind <- function(df, file) {
+    alleles <- df[,c("a0.x", "a1.x","a0.y","a1.y")]
+    ind <- rep(4, nrow(alleles))
+    ok <- apply(alleles, 1, function(a) all(a %in% c("A","C","G","T")))
+    write.table(alleles[ok,], file=file, quote=FALSE, row.names=FALSE, col.names=FALSE)
+    ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, file)), what=integer())
+    ind
+}
+
+for(c in chroms)
+    for(d in "w") {
+        cat(flipind(isect[[c]], flipinputfile(c, d)), file=flipindfile(c, d), sep="\n")
+    }
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484O3E")
+'org_babel_R_eoe'
+flipind <- function(df, file) {
++     alleles <- df[,c("a0.x", "a1.x","a0.y","a1.y")]
++     ind <- rep(4, nrow(alleles))
++     ok <- apply(alleles, 1, function(a) all(a %in% c("A","C","G","T")))
++     write.table(alleles[ok,], file=file, quote=FALSE, row.names=FALSE, col.names=FALSE)
++     ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, file)), what=integer())
++     ind
++ }
+> 
+> for(c in chroms)
++     for(d in "w") {
++         cat(flipind(isect[[c]], flipinputfile(c, d)), file=flipindfile(c, d), sep="\n")
++     }
+60 inconsistent SNPs out of 38977
+Read 38977 items
+51 inconsistent SNPs out of 41419
+Read 41419 items
+47 inconsistent SNPs out of 34441
+Read 34441 items
+32 inconsistent SNPs out of 30084
+Read 30084 items
+39 inconsistent SNPs out of 31185
+Read 31185 items
+33 inconsistent SNPs out of 33177
+Read 33177 items
+56 inconsistent SNPs out of 27372
+Read 27372 items
+49 inconsistent SNPs out of 28491
+Read 28491 items
+47 inconsistent SNPs out of 24386
+Read 24386 items
+40 inconsistent SNPs out of 26922
+Read 26922 items
+39 inconsistent SNPs out of 24865
+Read 24865 items
+52 inconsistent SNPs out of 24696
+Read 24696 items
+23 inconsistent SNPs out of 18973
+Read 18973 items
+26 inconsistent SNPs out of 16758
+Read 16758 items
+28 inconsistent SNPs out of 15284
+Read 15284 items
+36 inconsistent SNPs out of 15626
+Read 15626 items
+28 inconsistent SNPs out of 13338
+Read 13338 items
+10 inconsistent SNPs out of 15224
+Read 15224 items
+17 inconsistent SNPs out of 8656
+Read 8656 items
+17 inconsistent SNPs out of 13138
+Read 13138 items
+6 inconsistent SNPs out of 7475
+Read 7475 items
+10 inconsistent SNPs out of 7635
+Read 7635 items
+There were 21 warnings (use warnings() to see them)
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484O3E")
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> for(chr in rev(chroms)) {
+  cmd <- sprintf("%s/%s -i %s -n %02d < %s > %s",
+                 PATH, "flipgen",
+                 flipindfile(chr, "w"),
+                 nwtccc2, rdatafile(chr, "w"),
+                 frdatafile(chr, "w"))
+  print(cmd)
+  system(cmd)
+
+  cmd <- sprintf("ln -s $PWD/%s %s", rdatafile(c, "h"), frdatafile(c, "h"))
+  print(cmd)
+  system(cmd)
+}
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484oLR")
+'org_babel_R_eoe'
+for(chr in rev(chroms)) {
++   cmd <- sprintf("%s/%s -i %s -n %02d < %s > %s",
++                  PATH, "flipgen",
++                  flipindfile(chr, "w"),
++                  nwtccc2, rdatafile(chr, "w"),
++                  frdatafile(chr, "w"))
++   print(cmd)
++   system(cmd)
++ 
++   cmd <- sprintf("ln -s $PWD/%s %s", rdatafile(c, "h"), frdatafile(c, "h"))
++   print(cmd)
++   system(cmd)
++ }
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-22.flip -n 8267 < rdata/w-22.gen > frdata/w-22.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-21.flip -n 8267 < rdata/w-21.gen > frdata/w-21.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-20.flip -n 8267 < rdata/w-20.gen > frdata/w-20.gen"
+flipgen: flipgen.c:33: main: Assertion `flipind == 3' failed.
+Aborted
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-19.flip -n 8267 < rdata/w-19.gen > frdata/w-19.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-18.flip -n 8267 < rdata/w-18.gen > frdata/w-18.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-17.flip -n 8267 < rdata/w-17.gen > frdata/w-17.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-16.flip -n 8267 < rdata/w-16.gen > frdata/w-16.gen"
+flipgen: flipgen.c:33: main: Assertion `flipind == 3' failed.
+Aborted
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-15.flip -n 8267 < rdata/w-15.gen > frdata/w-15.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-14.flip -n 8267 < rdata/w-14.gen > frdata/w-14.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-13.flip -n 8267 < rdata/w-13.gen > frdata/w-13.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-12.flip -n 8267 < rdata/w-12.gen > frdata/w-12.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-11.flip -n 8267 < rdata/w-11.gen > frdata/w-11.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-10.flip -n 8267 < rdata/w-10.gen > frdata/w-10.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-09.flip -n 8267 < rdata/w-09.gen > frdata/w-09.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-08.flip -n 8267 < rdata/w-08.gen > frdata/w-08.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-07.flip -n 8267 < rdata/w-07.gen > frdata/w-07.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-06.flip -n 8267 < rdata/w-06.gen > frdata/w-06.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-05.flip -n 8267 < rdata/w-05.gen > frdata/w-05.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-04.flip -n 8267 < rdata/w-04.gen > frdata/w-04.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-03.flip -n 8267 < rdata/w-03.gen > frdata/w-03.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-02.flip -n 8267 < rdata/w-02.gen > frdata/w-02.gen"
+flipgen: flipgen.c:33: main: Assertion `flipind == 3' failed.
+Aborted
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+[1] "/home/davison/src/shellfish/bin/flipgen -i flipind/w-01.flip -n 8267 < rdata/w-01.gen > frdata/w-01.gen"
+[1] "ln -s $PWD/rdata/h-22.gen frdata/h-22.gen"
+ln: creating symbolic link `frdata/h-22.gen': File exists
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484oLR")
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> freq <- lapply(chroms, list)
+for(c in chroms) {
+    nh <- 410 ## 1910 ## 
+    ## Read in hapmap haplotypes in intersection
+    freq[[c]]$h <- 1 - colMeans(matrix(scan(frdatafile(c, "h"), what=integer()), nrow=nh))
+    cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
+    
+    ## Create w freq file
+    cmd <- sprintf("%s/sstat -p -n 8267 < %s > %s", PATH, frdatafile(c,"w"), freqfile(c,"w"))
+    print(cmd)
+    system(cmd)
+    freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
+    cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))   
+
+    png(file=sprintf("img/%s-freqs.png", c))
+    plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
+    dev.off()
+}
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484Cgd")
+'org_babel_R_eoe'
+freq <- lapply(chroms, list)
+> for(c in chroms) {
++     nh <- 410 ## 1910 ## 
++     ## Read in hapmap haplotypes in intersection
++     freq[[c]]$h <- 1 - colMeans(matrix(scan(frdatafile(c, "h"), what=integer()), nrow=nh))
++     cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
++     
++     ## Create w freq file
++     cmd <- sprintf("%s/sstat -p -n 8267 < %s > %s", PATH, frdatafile(c,"w"), freqfile(c,"w"))
++     print(cmd)
++     system(cmd)
++     freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
++     cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))   
++ 
++     png(file=sprintf("img/%s-freqs.png", c))
++     plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
++     dev.off()
++ }
+Error in file(file, "r") : cannot open the connection
+In addition: Warning message:
+In file(file, "r") :
+  cannot open file 'frdata/h-01.gen': No such file or directory
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484Cgd")
+Warning message:
+closing unused connection 4 (/home/davison/src/shellfish/bin/flipind < flipinput/w-22.flip) 
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> wfrequency <- function(c, i) {
+    w <- scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
+                           i, i, rdatafile(c, "w"))),
+              quiet=TRUE, what="")
+    wg <- matrix(as.numeric(w[6:length(w)]), nrow=3)
+    mean(t(2:0) %*% wg) / 2
+}
+
+hfrequency <- function(c, i)
+    1 - mean(scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
+                               i, i, rdatafile(c, "h"))),
+                  quiet=TRUE, what=integer()))
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484c0p")
+'org_babel_R_eoe'
+wfrequency <- function(c, i) {
++     w <- scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
++                            i, i, rdatafile(c, "w"))),
++               quiet=TRUE, what="")
++     wg <- matrix(as.numeric(w[6:length(w)]), nrow=3)
++     mean(t(2:0) %*% wg) / 2
++ }
+> 
+> hfrequency <- function(c, i)
++     1 - mean(scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
++                                i, i, rdatafile(c, "h"))),
++                   quiet=TRUE, what=integer()))
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=FALSE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484c0p")
+Error in as.data.frame.default(x[[i]], optional = TRUE) : 
+  cannot coerce class "function" into a data.frame
+Error in { : 
+  Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> rsids <- read.table("/tmp/org-babel-R-import1484p-v", header=TRUE, row.names=NULL, sep="\t", as.is=TRUE)
+check.snp <- function(rs, c) {
+    idx <- which(isect[[c]]$rs == rs)
+    pipe.w <- function(c)
+        pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f4-5",
+                     idx, idx, rdatafile(c, "w")))
+    pipe.h <- function(c)
+        pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f3-4",
+                     idx, idx, rlegendfile(c, "h")))
+    
+    data.frame(rs = rs,
+               chr = c,
+               alleles.w = paste(scan(pipe.w(c), what=""), collapse="/"),
+               alleles.h = paste(scan(pipe.h(c), what=""), collapse="/"),
+               freq.w = round(wfrequency(c, idx), 2),
+               freq.h = round(hfrequency(c, idx), 2))
+}
+
+do.call("rbind", lapply(rsids[,1], check.snp, "22"))
+{function(object, transfer.file) {
+    if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=TRUE, quote=FALSE), silent=FALSE),
+                "try-error")) {
+        stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
+    }
+}}(object=.Last.value, transfer.file="/tmp/org-babel-R1484oSF")
+'org_babel_R_eoe'
+rsids <- read.table("/tmp/org-babel-R-import1484p-v", header=TRUE, row.names=NULL, sep="\t", as.is=TRUE)
+> check.snp <- function(rs, c) {
++     idx <- which(isect[[c]]$rs == rs)
++     pipe.w <- function(c)
++         pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f4-5",
++                      idx, idx, rdatafile(c, "w")))
++     pipe.h <- function(c)
++         pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f3-4",
++                      idx, idx, rlegendfile(c, "h")))
++     
++     data.frame(rs = rs,
++                chr = c,
++                alleles.w = paste(scan(pipe.w(c), what=""), collapse="/"),
++                alleles.h = paste(scan(pipe.h(c), what=""), collapse="/"),
++                freq.w = round(wfrequency(c, idx), 2),
++                freq.h = round(hfrequency(c, idx), 2))
++ }
+> 
+> do.call("rbind", lapply(rsids[,1], check.snp, "22"))
+Read 2 items
+Read 2 items
+Read 2 items
+Read 2 items
+Read 2 items
+Read 2 items
+         rs chr alleles.w alleles.h freq.w freq.h
+1 rs5747968  22       A/C       T/G   0.67   0.69
+2 rs2236639  22       A/G       G/A   0.08   0.95
+3 rs9605028  22       A/G       A/G   0.95   0.95
+> {function(object, transfer.file) {
++     if(inherits(try(write.table(object, file=transfer.file, sep="\t", na="nil",row.names=FALSE, col.names=TRUE, quote=FALSE), silent=FALSE),
++                 "try-error")) {
++         stop("Error returning tabular data to Org. Use ':results output' with e.g. print() to return text output from R to Org")
++     }
++ }}(object=.Last.value, transfer.file="/tmp/org-babel-R1484oSF")
+> 'org_babel_R_eoe'
+[1] "org_babel_R_eoe"
+> 
+
+
+Process R:2 killed at Sat Aug 14 07:38:23 2010
+
+#+end_src
+* TODO What's going on with chromosome 1 ??
 * TODO Phasing
 * PCA
 #+begin_src sh
