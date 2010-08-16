@@ -345,9 +345,9 @@ We're going to flip WTCCC2 to match HapMap3
                    rdatafile(c, "w"),
                    frdatafile(c, "w"))
     print(cmd)
-    ## system(cmd)
+    system(cmd)
   
-    cmd <- sprintf("ln -s $PWD/%s %s", rdatafile(c, "h"), frdatafile(c, "h"))
+    cmd <- sprintf("ln -fs $PWD/%s %s", rdatafile(c, "h"), frdatafile(c, "h"))
     print(cmd)
     system(cmd)
   }
