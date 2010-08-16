@@ -158,22 +158,25 @@ mv POBI.sample POBIx.sample
 
 * DONE Prepare data set for phasing
 ** Environment
-#+begin_src sh :eval never
+#+begin_src sh
   cd data/HM3
   for i in `seq 1 22` ; do
-      ln -s \
+      ln -fs \
           ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/hapmap3.r2.b36.allMinusPilot1CEU.chr$i.snpfilt.haps \
           `printf "%02d" $i`.hap
   
-      ln -s \
+      ln -fs \
           ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/hapmap3.r2.b36.allMinusPilot1CEU.chr$i.snpfilt.legend \
           `printf "%02d" $i`.legend
+      ln -fs \
+          ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/genetic_map_chr${i}_combined_b36.txt \
+          `printf "%02d" $i`.map
   done
 #+end_src
 
 #+begin_src R
   PATH <- "/home/davison/src/shellfish/bin"
-  system("mkdir -p img rdata rlegend flipind flipinput frdata freq lines")
+  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines")
   
   chroms <- sprintf("%02d", 1:22)
   nwtccc2 <- 8267
@@ -186,11 +189,17 @@ mv POBI.sample POBIx.sample
         switch(match.arg(dataset),
                h = sprintf("data/HM3/%s.legend", chr),
                w = error("No need for this"))
+  mapfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.map", chr),
+             w = error("No need for this"))
   rdatafile <- function(chr, dataset)
     sprintf("rdata/%s-%s.%s", dataset, chr,
             if(dataset == "w") "gen" else "hap")
   rlegendfile <- function(chr, dataset)
     sprintf("rlegend/%s-%s.legend", dataset, chr)
+  rmapfile <- function(chr, dataset)
+    sprintf("rmap/%s-%s.map", dataset, chr)
   frdatafile <- function(chr, dataset)
       sprintf("frdata/%s-%s.%s", dataset, chr,
               if(dataset == "w") "gen" else "hap")
@@ -238,13 +247,21 @@ We're going to flip WTCCC2 to match HapMap3
           print(cmd)
           system(cmd)
           if(d == "h") {
-              ## legend file has header
+              ## legend and mapfiles have headers
               lfile <- tempfile()
               cat(map+1, sep="\n", file=lfile)
+    
               cmd <- paste(file.path(PATH, "lines"),
                            "-f", lfile,
                            "<", legendfile(c, "h"),
                            ">", rlegendfile(c, "h"))
+              print(cmd)
+              system(cmd)
+    
+              cmd <- paste(file.path(PATH, "lines"),
+                           "-f", lfile,
+                           "<", mapfile(c, "h"),
+                           ">", rmapfile(c, "h"))
               print(cmd)
               system(cmd)
           }
