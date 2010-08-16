@@ -174,6 +174,7 @@ mv POBI.sample POBIx.sample
   done
 #+end_src
 
+#+source: set-variables
 #+begin_src R
   PATH <- "/home/davison/src/shellfish/bin"
   system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines")
@@ -213,6 +214,7 @@ mv POBI.sample POBIx.sample
       sprintf("flipinput/%s-%s.flip", dataset, chr)
 #+end_src
 
+#+source: set-up-data-frames
 #+begin_src R
   dd <- list()
   dd$h <- lapply(legendfile(chroms, "h"), read.table, header=TRUE, as.is=TRUE, col.names=c("rs","pos","a0","a1"))
@@ -230,11 +232,15 @@ mv POBI.sample POBIx.sample
 
 ** DONE Restrict to intersection
 We're going to flip WTCCC2 to match HapMap3
+*** Create merged SNP lists
+#+source: create-isect
 #+begin_src R
   isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
   isect <- lapply(isect, function(i) i[order(i$pos.x),])
-  
-  ## Write line indices for WTCCC2 and create restricted file
+#+end_src
+*** Create restricted data files
+#+source: create-restricted-files
+#+begin_src R
   for(c in chroms) {
       for(d in c("w","h")) {
           map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
@@ -312,6 +318,7 @@ We're going to flip WTCCC2 to match HapMap3
 
 ** Flip the WTCCC2 genotypes to match HapMap3 strand
 *** Construct flip indicator files
+#+source: create-flip-indicator-files
 #+begin_src R
   flipind <- function(df, file) {
       alleles <- df[,c("a0.x", "a1.x","a0.y","a1.y")]
@@ -328,6 +335,7 @@ We're going to flip WTCCC2 to match HapMap3
       }
 #+end_src
 *** Flip WTCCC2 PoBI+MS
+#+source: create-flipped-files
 #+begin_src R
   for(c in rev(chroms)) {
     cmd <- sprintf("%s/%s -i %s -n %02d < %s > %s",
@@ -344,6 +352,9 @@ We're going to flip WTCCC2 to match HapMap3
     system(cmd)
   }
 #+end_src
+
+#+results: create-flipped-files
+: 0
 
 #+results:
 : 0
@@ -559,6 +570,19 @@ Functions to compute frequency of allele 0
 
 | rs#       | chrom |      pos | strand | build    | ref_allele | ref-allele_freq | ref-allele_count | other_allele | other-freq | other-allele_count |
 | rs2236639 | chr22 | 15452483 | +      | ncbi_b36 | A          |           0.084 |               19 | G            |      0.916 |                207 |
+
+** Babel script
+#+begin_src R :noweb yes
+  <<set-variables()>>
+  <<set-up-data-frames()>>
+  <<create-isect()>>
+  <<create-restricted-files()>>
+  <<create-flip-indicator-files()>>
+  <<create-flipped-files()>>
+#+end_src
+
+#+results:
+: 0
 
 ** Session transcript
 #+begin_src ess-transcript
