@@ -1,9 +1,8 @@
-#+title: A genome-wide perspective on the peopling of the British Isles
-#+author: Dan, Chris, Garrett, Peter et al.
+#+title:A genome-wide perspective on the peopling of the British Isles
+#+author:Dan, Chris, Garrett, Peter et al.
 
 #+babel: :dir /davison@oak.well.ox.ac.uk:~/bench
 #+options: ^:{}
-
 
 * Environment
 ** Org
@@ -201,6 +200,8 @@ mv POBI.sample POBIx.sample
     sprintf("rlegend/%s-%s.legend", dataset, chr)
   rmapfile <- function(chr, dataset)
     sprintf("rmap/%s-%s.map", dataset, chr)
+  rstrandfile <- function(chr, dataset)
+    sprintf("rstrand/%s-%s.strand", dataset, chr)
   frdatafile <- function(chr, dataset)
       sprintf("frdata/%s-%s.%s", dataset, chr,
               if(dataset == "w") "gen" else "hap")
@@ -243,34 +244,35 @@ We're going to flip WTCCC2 to match HapMap3
 #+begin_src R
   for(c in chroms) {
       for(d in c("w","h")) {
-          map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
-          cat(map, sep="\n", file=linesfile(c, d))
-          stopifnot(!is.na(map))
-          cmd <- paste(file.path(PATH, "lines"),
-                       "-f", linesfile(c, d),
-                       "<", datafile(c, d),
-                       ">", rdatafile(c, d))
-          print(cmd)
-          system(cmd)
-          if(d == "h") {
-              ## legend and mapfiles have headers
-              lfile <- tempfile()
-              cat(map+1, sep="\n", file=lfile)
+          ## map <- match(isect[[c]]$rs, dd[[d]][[c]]$rs)
+          ## cat(map, sep="\n", file=linesfile(c, d))
+          ## stopifnot(!is.na(map))
+          ## cmd <- paste(file.path(PATH, "lines"),
+          ##              "-f", linesfile(c, d),
+          ##              "<", datafile(c, d),
+          ##              ">", rdatafile(c, d))
+          ## print(cmd)
+          ## system(cmd)
+          ## if(d == "h") {
+          ##     ## legend and mapfiles have headers
+          ##     lfile <- tempfile()
+          ##     cat(map+1, sep="\n", file=lfile)
     
-              cmd <- paste(file.path(PATH, "lines"),
-                           "-f", lfile,
-                           "<", legendfile(c, "h"),
-                           ">", rlegendfile(c, "h"))
-              print(cmd)
-              system(cmd)
+          ##     cmd <- paste(file.path(PATH, "lines"),
+          ##                  "-f", lfile,
+          ##                  "<", legendfile(c, "h"),
+          ##                  ">", rlegendfile(c, "h"))
+          ##     print(cmd)
+          ##     system(cmd)
     
-              cmd <- paste(file.path(PATH, "lines"),
-                           "-f", lfile,
-                           "<", mapfile(c, "h"),
-                           ">", rmapfile(c, "h"))
-              print(cmd)
-              system(cmd)
-          }
+          ##     cmd <- paste(file.path(PATH, "lines"),
+          ##                  "-f", lfile,
+          ##                  "<", mapfile(c, "h"),
+          ##                  ">", rmapfile(c, "h"))
+          ##     print(cmd)
+          ##     system(cmd)
+          ## }
+          cat(rep("+", length(map)), sep="\n", file=rstrandfile(c, "w"))
       }
   }
 #+end_src
@@ -1208,6 +1210,35 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
 #+end_src
 * TODO What's going on with chromosome 1 ??
 * TODO Phasing
+  -strand_g frdata/w-$c.gen.strand \
+  #+begin_src sh
+    mkdir -p impute2/cmds impute2/out
+    
+    for c in `seq -w 1 22` ; do
+        echo \
+            impute2 \
+            -phase \
+            -m rmap/h-$c.map \
+            -h frdata/h-$c.hap \
+            -l rlegend/h-$c.legend \
+            -g frdata/w-$c.gen \
+            -int 20.4e6 20.5e6 \
+            -Ne 11418 \
+            -o impute2/out/$c \
+            > impute2/cmds/$c.sh
+    done
+  #+end_src
+  
+* TODO Validate phasing
+** Allele frequencies should be the same!
+** Distribution of identical stretch lengths
+#+begin_src R :var x=99
+  identical.stretches <- function(hap1, hap2) {
+      r <- rle(hap1 == hap2)
+      r$lengths[r$values]
+  }
+#+end_src
+
 * PCA
 #+begin_src sh
   cd data/POBI+MS
