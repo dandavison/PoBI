@@ -89,73 +89,285 @@ wc -l data/MS/exclusions.all
 | 6105 | total                                           |
 | 5565 | unique                                          |
 | 5565 | data/MS/exclusions.all                          |
+** Sample numbers
+
+- PoBI+MS id files have 7924 individs
+- Raw files and exclusion files suggest there should be 8233 in PoBI+MS.
+- Data files have 8267
+
+  #+begin_src R :results output
+  system(paste("~/bin/numindivs-gen", datafile("22", "w")))
+  #+end_src
+
+
+|       | PoBI |    MS | PoBI+MS |
+|-------+------+-------+---------|
+| all   | 2912 | 11376 |         |
+| ex    |  368 |  5687 |         |
+| final | 2544 |  5689 |    8233 |
+#+TBLFM: @4$4=@4$2+@4$3
+#+TBLFM: @4$3=@2$3-@3$3
+#+TBLFM: @4$2=@2$2-@3$2
+
+#+begin_src sh
+wc -l data/POBI+MS/*-allx.ids
+#+end_src
+
+#+results:
+|   7924 | data/POBI+MS/01-allx.ids |
+|   7924 | data/POBI+MS/02-allx.ids |
+|   7924 | data/POBI+MS/03-allx.ids |
+|   7924 | data/POBI+MS/04-allx.ids |
+|   7924 | data/POBI+MS/05-allx.ids |
+|   7924 | data/POBI+MS/06-allx.ids |
+|   7924 | data/POBI+MS/07-allx.ids |
+|   7924 | data/POBI+MS/08-allx.ids |
+|   7924 | data/POBI+MS/09-allx.ids |
+|   7924 | data/POBI+MS/10-allx.ids |
+|   7924 | data/POBI+MS/11-allx.ids |
+|   7924 | data/POBI+MS/12-allx.ids |
+|   7924 | data/POBI+MS/13-allx.ids |
+|   7924 | data/POBI+MS/14-allx.ids |
+|   7924 | data/POBI+MS/15-allx.ids |
+|   7924 | data/POBI+MS/16-allx.ids |
+|   7924 | data/POBI+MS/17-allx.ids |
+|   7924 | data/POBI+MS/18-allx.ids |
+|   7924 | data/POBI+MS/19-allx.ids |
+|   7924 | data/POBI+MS/20-allx.ids |
+|   7924 | data/POBI+MS/21-allx.ids |
+|   7924 | data/POBI+MS/22-allx.ids |
+| 174328 | total                    |
+
 * DONE Create combined POBI+MS data set
 
 #+begin_src sh
   cd data/POBI+MS
-  for chrom in `seq -w 1 22` ; do
+  for chrom in `seq -w 22 22` ; do
       python ~/src/wtccc2/wtccc2-analyse/wtccc2-analyse.py \
           --make-gen --platform illumina \
           --cohorts 'MS POBI' --exclude ../MS/exclusions.all \
-          --chrom $chrom --outfile $chrom
+          --chrom $chrom --outfile $chrom --messy
   done
 #+end_src
 
+** Check output for chr22
+   :PROPERTIES:
+   :dir: /davison@oak.well.ox.ac.uk:/home/davison/bench/data/POBI+MS-test/
+   :END:
+*** DONE Numbers in raw files
 
-What is the explanation of this line in the output?
-MS: 2 excluded individuals not recognised
-
-#+begin_example
-Mon May 24 00:33:29 2010
+#+begin_example 
+~/bench/data/POBI+MS-test> bash z.sh
+Wed Aug 25 20:00:04 2010
 Analysis                      PCA
 Cohorts                       ['MS', 'POBI']
 Chromosomes                   [22]
 SNP file                      None
+Output file/prefix            22
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Intersecting chromosome files
 
-gunzip -vc /data/oak/project/wtccc2/MS/illumina/calls/MS_22_illumina.gen.gz > MS-22.tmp
+gunzip -vc /data/oak/project/wtccc2/MS/illumina/calls/MS_22_illumina.gen.gz > 22-MS-22.tmp
 /data/oak/project/wtccc2/MS/illumina/calls/MS_22_illumina.gen.gz:	 93.8%
-gunzip -vc /data/oak/project/wtccc2/POBI/illumina/calls/POBI_22_illumina.gen.gz > POBI-22.tmp
+gunzip -vc /data/oak/project/wtccc2/POBI/illumina/calls/POBI_22_illumina.gen.gz > 22-POBI-22.tmp
 /data/oak/project/wtccc2/POBI/illumina/calls/POBI_22_illumina.gen.gz:	 94.4%
-cut -d ' ' -f 2 < MS-22.tmp > /tmp/insect-5552-296747787656
-cut -d ' ' -f 2 < POBI-22.tmp > /tmp/insect-5552-720099268737
-sort /tmp/insect-5552-296747787656 | uniq > /tmp/insect-5552-394861719542
-sort /tmp/insect-5552-720099268737 | uniq > /tmp/insect-5552-429768457261
-comm -12 /tmp/insect-5552-394861719542 /tmp/insect-5552-429768457261 > /tmp/insect-5552-39014865533
-match /tmp/insect-5552-39014865533 < /tmp/insect-5552-296747787656 > /tmp/insect-5552-203759455301
-match /tmp/insect-5552-39014865533 < /tmp/insect-5552-720099268737 > /tmp/insect-5552-922824681739
-paste /tmp/insect-5552-203759455301 /tmp/insect-5552-203759455301 | sort -n -k 1 | cut -f 2 > /tmp/insect-5552-803642599627
-paste /tmp/insect-5552-203759455301 /tmp/insect-5552-922824681739 | sort -n -k 1 | cut -f 2 > /tmp/insect-5552-459908440033
-lines -f /tmp/insect-5552-803642599627 < MS-22.tmp > insect_out/MS-22.tmp.insect
-lines -f /tmp/insect-5552-459908440033 < POBI-22.tmp > insect_out/POBI-22.tmp.insect
+insect -v --unique -d ' ' -f 2 -o 22-insect_out 22-MS-22.tmp 22-POBI-22.tmp
+cut -d ' ' -f 2 < 22-MS-22.tmp > /tmp/insect-1601-188280147932
+cut -d ' ' -f 2 < 22-POBI-22.tmp > /tmp/insect-1601-415504816454
+sort /tmp/insect-1601-188280147932 | uniq > /tmp/insect-1601-281609185427
+sort /tmp/insect-1601-415504816454 | uniq > /tmp/insect-1601-993330115599
+comm -12 /tmp/insect-1601-281609185427 /tmp/insect-1601-993330115599 > /tmp/insect-1601-686997337336
+match /tmp/insect-1601-686997337336 < /tmp/insect-1601-188280147932 > /tmp/insect-1601-100889485177
+match /tmp/insect-1601-686997337336 < /tmp/insect-1601-415504816454 > /tmp/insect-1601-16338026931
+paste /tmp/insect-1601-100889485177 /tmp/insect-1601-100889485177 | sort -n -k 1 | cut -f 2 > /tmp/insect-1601-828485611156
+paste /tmp/insect-1601-100889485177 /tmp/insect-1601-16338026931 | sort -n -k 1 | cut -f 2 > /tmp/insect-1601-661844370606
+lines -f /tmp/insect-1601-828485611156 < 22-MS-22.tmp > 22-insect_out/22-MS-22.tmp.insect
+lines -f /tmp/insect-1601-661844370606 < 22-POBI-22.tmp > 22-insect_out/22-POBI-22.tmp.insect
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Concatenating chromosomes
 
-cat insect_out/MS-* > MS.gen
-cat insect_out/POBI-* > POBI.gen
+cat 22-insect_out/22-MS-* > 22-MS.gen
+cat 22-insect_out/22-POBI-* > 22-POBI.gen
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Excluding individuals
+Restricting to selected SNPs
 
-cat /data/oak/project/wtccc2/MS/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > MS.xids
-sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | match MS.xids > MS.xidx
-MS: 2 excluded individuals not recognised
-grep -vF NA MS.xidx | sort -n > tmp && mv tmp MS.xidx
-columns -s -v -f MS.xidx < MS.gen > MSx.gen
-sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file MS.xidx > MSx.ids
-rm MS.gen
-mv MS.sample MSx.sample
-cat /data/oak/project/wtccc2/POBI/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > POBI.xids
-sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | match POBI.xids > POBI.xidx
-POBI: 5565 excluded individuals not recognised
-grep -vF NA POBI.xidx | sort -n > tmp && mv tmp POBI.xidx
-columns -s -v -f POBI.xidx < POBI.gen > POBIx.gen
-sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file POBI.xidx > POBIx.ids
-rm POBI.gen
-mv POBI.sample POBIx.sample
+shellfish --make-gen --file 22-MS  --out 22-MSr --messy
+2010-08-25_20.00.24
+shellfish version 0.0.8
+20:00:24	Found .gen format data 22-MS.gen
+20:00:24	File1: found .gen format data with 11376 individuals and 9607 SNPs
 #+end_example
 
-* DONE Prepare data set for phasing
+#+function: numindivs(coh)
+#+begin_src sh
+wc -l < ~/data/wtccc2/$coh/illumina/calls/${coh}_illumina.sample
+#+end_src
+
+
+#+call: numindivs(coh="MS")
+#+results: numindivs(coh="MS")
+: 11378
+
+#+begin_example 
+mv 22-MS.sample 22-MSr.sample
+shellfish --make-gen --file 22-POBI  --out 22-POBIr --messy
+2010-08-25_20.00.24
+shellfish version 0.0.8
+20:00:24	Found .gen format data 22-POBI.gen
+20:00:24	File1: found .gen format data with 2912 individuals and 9607 SNPs
+#+end_example
+
+#+call: numindivs(coh="POBI")
+#+results: numindivs(coh="POBI")
+: 2914
+
+*** Excluding individuals
+**** MS
+***** DONE Unrecognised individs
+
+#+begin_example 
+Excluding individuals
+
+cat /data/oak/project/wtccc2/MS/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > 22-MS.xids
+sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | match 22-MS.xids > 22-MS.wNA.xidx
+MS: 1 excluded individuals not recognised
+#+end_example
+
+#+begin_src R :session :results output
+  on.exit(closeAllConnections())
+  MS.ids.x <- scan("22-MS.xids", what="", quiet=TRUE)
+  MS.samplef <- "/data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample"
+  MS.ids.full <- scan(pipe(sprintf("sed 1,2d %s | cut -d ' ' -f 1", MS.samplef)), what="", quiet=TRUE)
+  
+  ok <- MS.ids.x %in% MS.ids.full
+  cat("Number of individs: ", length(MS.ids.full), "\n")
+  cat("Number of individs to be excluded: ", length(MS.ids.x), "\n")
+  cat("Of these number recognised: ", sum(ok), "\n")
+  cat(sprintf("Not recognised (line %d):\n", which(!ok)))
+  print(MS.ids.x[!ok])
+#+end_src
+
+#+results:
+: 
+:  Number of individs:  11376
+: Number of individs to be excluded:  5688
+: Of these number recognised:  5687
+: Not recognised (line 5654):
+: [1] "97505_H0392029_C04"
+
+
+So line 5654 of MS.ids.x looks screwed up; the reason is that there's
+no new line at the end of
+/data/oak/project/wtccc2/MS/illumina/exclusions/MS_illumina_UnaffectedTwins.exclude.txt
+
+***** TODO Numbers
+#+begin_example 
+grep -vF NA 22-MS.wNA.xidx | sort -n > 22-MS-tmp && mv 22-MS-tmp 22-MS.xidx
+columns -s -v -f 22-MS.xidx < 22-MSr.gen > 22-MSx.gen
+sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file 22-MS.xidx > 22-MSx.ids
+mv 22-MSr.sample 22-MSx.sample
+#+end_example
+
+So 5687 should have been removed from MS, leaving us with 11376-5687 = 5689
+
+#+begin_src sh
+echo -n "To_exclude "
+wc -l 22-MS.xids
+
+echo -n "Indices_to_be_excluded "
+wc -l 22-MS.wNA.xidx
+
+echo -n "Indices_to_be_excluded_wo_NA "
+wc -l 22-MS.xidx
+
+echo -n "Included_IDs "
+wc -l 22-MSx.ids
+
+echo -n "Num_indivs_in_gen_file "
+~/bin/numindivs-gen 22-MSx.gen
+#+end_src
+
+#+results:
+| To_exclude                   |  5688 | 22-MS.xids     |
+| Indices_to_be_excluded       |  5688 | 22-MS.wNA.xidx |
+| Indices_to_be_excluded_wo_NA | 17061 | 22-MS.xidx     |
+| Included_IDs                 |  5288 | 22-MSx.ids     |
+| Num_indivs_in_gen_file       |  5689 |                |
+
+**** PoBI
+***** Unrecognised individs
+#+begin_example 
+    cat /data/oak/project/wtccc2/POBI/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > 22-POBI.xids
+    sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | match 22-POBI.xids > 22-POBI.xidx
+    POBI: 5565 excluded individuals not recognised
+#+end_example
+
+This 5565 is the number of indivs in MS/exclusions.all, so that makes sense.
+
+#+begin_src R :session :results output
+  on.exit(closeAllConnections())
+  POBI.ids.x <- scan("22-POBI.xids", what="", quiet=TRUE)
+  POBI.samplef <- "/data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample"
+  POBI.ids.full <- scan(pipe(sprintf("sed 1,2d %s | cut -d ' ' -f 1", POBI.samplef)), what="", quiet=TRUE)
+  
+  ok <- POBI.ids.x %in% POBI.ids.full
+  cat("Number of individs: ", length(POBI.ids.full), "\n")
+  cat("Number of individs to be excluded: ", length(POBI.ids.x), "\n")
+  cat("Of these number recognised: ", sum(ok), "\n")
+#+end_src
+
+#+results:
+: 
+:  Number of individs:  2912
+: Number of individs to be excluded:  5899
+: Of these number recognised:  334
+
+***** TODO Numbers
+#+begin_example
+grep -vF NA 22-POBI.wNA.xidx | sort -n > 22-POBI-tmp && mv 22-POBI-tmp 22-POBI.xidx
+columns -s -v -f 22-POBI.xidx < 22-POBIr.gen > 22-POBIx.gen
+sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file 22-POBI.xidx > 22-POBIx.ids
+mv 22-POBIr.sample 22-POBIx.sample
+#+end_example
+
+So 334 should have been removed from MS, leaving us with src_R{2912-334} = 2578.
+
+#+begin_src sh
+~/bin/numindivs-gen 22-POBIx.gen
+wc -l 22-POBIx.ids
+#+end_src
+
+#+results:
+| 2578 |              |
+| 2636 | 22-POBIx.ids |
+
+*** Combine across cohorts
+#+begin_example 
+Combining data across cohorts
+
+cut -d ' ' -f 1-5 < 22-MSx.gen > 22-MSx.map
+cut -d ' ' -f 6- < 22-MSx.gen > 22-MSx.gen_only
+cut -d ' ' -f 1-5 < 22-POBIx.gen > 22-POBIx.map
+cut -d ' ' -f 6- < 22-POBIx.gen > 22-POBIx.gen_only
+paste -d ' ' 22-MSx.gen 22-POBIx.gen_only > 22-allx.gen
+cat 22-MSx.ids 22-POBIx.ids > 22-allx.ids
+#+end_example
+
+Total should be src_R{5689+2578}=8267
+
+#+begin_src sh
+~/bin/numindivs-gen 22-allx.gen
+wc -l *.ids
+#+end_src
+
+#+results:
+|  8267 |              |
+|  5288 | 22-MSx.ids   |
+|  2636 | 22-POBIx.ids |
+|  7924 | 22-allx.ids  |
+| 15848 | total        |
+
+* Prepare data set for phasing
 ** Environment
 #+begin_src sh
   cd data/HM3
@@ -182,26 +394,26 @@ mv POBI.sample POBIx.sample
   nwtccc2 <- 8267
   
   datafile <- function(chr, dataset=c("h","w"))
-    switch(match.arg(dataset),
-           h = sprintf("data/HM3/%s.hap", chr),
-           w = sprintf("data/POBI+MS/%s-allx.gen", chr))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.hap", chr),
+             w = sprintf("data/POBI+MS/%s-allx.gen", chr))
   legendfile <- function(chr, dataset=c("h","w"))
-        switch(match.arg(dataset),
-               h = sprintf("data/HM3/%s.legend", chr),
-               w = error("No need for this"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.legend", chr),
+             w = error("No need for this"))
   mapfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              h = sprintf("data/HM3/%s.map", chr),
              w = error("No need for this"))
   rdatafile <- function(chr, dataset)
-    sprintf("rdata/%s-%s.%s", dataset, chr,
-            if(dataset == "w") "gen" else "hap")
+      sprintf("rdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else "hap")
   rlegendfile <- function(chr, dataset)
-    sprintf("rlegend/%s-%s.legend", dataset, chr)
+      sprintf("rlegend/%s-%s.legend", dataset, chr)
   rmapfile <- function(chr, dataset)
-    sprintf("rmap/%s-%s.map", dataset, chr)
+      sprintf("rmap/%s-%s.map", dataset, chr)
   rstrandfile <- function(chr, dataset)
-    sprintf("rstrand/%s-%s.strand", dataset, chr)
+      sprintf("rstrand/%s-%s.strand", dataset, chr)
   frdatafile <- function(chr, dataset)
       sprintf("frdata/%s-%s.%s", dataset, chr,
               if(dataset == "w") "gen" else "hap")
@@ -460,25 +672,25 @@ Was:
 
 ** DONE Check allele frequencies
 #+begin_src R
-    freq <- lapply(chroms, list)
-    for(c in rev(chroms)) {
-        nh <- 410 ## 1910 ## 
-        ## Read in hapmap haplotypes in intersection
-        freq[[c]]$h <- 1 - colMeans(matrix(scan(frdatafile(c, "h"), what=integer()), nrow=nh))
-        cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
-        
-        ## Create w freq file
-        cmd <- sprintf("%s/sstat -p -n %d < %s > %s",
-                       PATH, nwtccc2, frdatafile(c,"w"), freqfile(c,"w"))
-        print(cmd)
-        system(cmd)
-        freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
-        cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))   
-    
-        png(file=sprintf("img/%s-freqs.png", c))
-        plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
-        dev.off()
-    }
+  freq <- lapply(chroms, list)
+  for(c in rev(chroms)) {
+      nh <- 1910 ## 410
+      ## Read in hapmap haplotypes in intersection
+      freq[[c]]$h <- 1 - colMeans(matrix(scan(frdatafile(c, "h"), what=integer()), nrow=nh))
+      cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
+      
+      ## Create w freq file
+      cmd <- sprintf("%s/sstat -p -n %d < %s > %s",
+                     PATH, nwtccc2, frdatafile(c,"w"), freqfile(c,"w"))
+      print(cmd)
+      system(cmd)
+      freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
+      cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))   
+  
+      png(file=sprintf("img/%s-freqs.png", c))
+      plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
+      dev.off()
+  }
 #+end_src
 
 #+results:
@@ -1228,17 +1440,31 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
             > impute2/cmds/$c.sh
     done
   #+end_src
-  
+* TODO Sample lists
+
+  POBI+MS files have 8267 individuals
+
+  #+begin_src R :results output
+    system(paste("~/bin/numindivs-gen", datafile("22", "w")))
+  #+end_src
+
+  #+results:
+  : 8267
+
 * TODO Validate phasing
 ** Allele frequencies should be the same!
 ** Distribution of identical stretch lengths
-#+begin_src R :var x=99
+#+begin_src R
   identical.stretches <- function(hap1, hap2) {
       r <- rle(hap1 == hap2)
       r$lengths[r$values]
   }
 #+end_src
+*** Compare Orkney vs Norway and Spain vs Norway
+#+begin_src R
 
+#+end_src
+    
 * PCA
 #+begin_src sh
   cd data/POBI+MS
@@ -1262,3 +1488,7 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
 : 
 : sent 284 bytes  received 13 bytes  198.00 bytes/sec
 : total size is 612863  speedup is 2063.51
+
+# Local Variables=
+# org-babel-default-header-args:R= ((:session . "*R-PoBI*"))
+# End:
