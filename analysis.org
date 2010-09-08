@@ -1,11 +1,12 @@
-#+title:A genome-wide perspective on the peopling of the British Isles
-#+author:Dan, Chris, Garrett, Peter et al.
-
-#+babel: :dir /davison@oak.well.ox.ac.uk:~/bench
-#+options: ^:{}
+#+title: A genome-wide perspective on the history of the British Isles
+#+author: Dan, Chris, Garrett, Peter et al.
 
 * Environment
 ** Org
+---+ ---babel:    :dir /davison@oak.well.ox.ac.uk:~/bench
+#+babel:    :dir ~/bench
+#+options: ^:{}
+
 #+begin_src emacs-lisp :cache no
   (setq org-babel-default-header-args:R '((:session . "*R-PoBI*")))
 #+end_src
@@ -15,23 +16,20 @@
 
 ** Variables
 #+source: MS-ifile
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent
 "data/MS/MS_illumina.sample.geoinfoIII"
 #+end_src
 
-#+results[c52bd1ba036e4512e150e247e25fa684ffeabb4e]: MS-ifile
-: data/MS/MS_illumina.sample.geoinfoIII
-
 ** R environment
 #+begin_src R :var ifile=MS-ifile :results silent
-  MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
-  colnames(MSindivs) <- "country"
+   MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
+   colnames(MSindivs) <- "country"
 #+end_src
 
 * DONE MS exclusions
 ** Select countries
 #+tblname: include-countries
-| Country | n    |
+| Country |    n |
 |---------+------|
 | Belgium |  566 |
 | Denmark |  363 |
@@ -139,14 +137,14 @@ wc -l data/POBI+MS/*-allx.ids
 | 174328 | total                    |
 
 * DONE Create combined POBI+MS data set
-
+** wtccc2-analyse invocation
 #+begin_src sh
   cd data/POBI+MS
-  for chrom in `seq -w 22 22` ; do
+  for chrom in `seq -w 14 22 | tac` ; do
       python ~/src/wtccc2/wtccc2-analyse/wtccc2-analyse.py \
           --make-gen --platform illumina \
           --cohorts 'MS POBI' --exclude ../MS/exclusions.all \
-          --chrom $chrom --outfile $chrom --messy
+          --chrom $chrom --outfile $chrom
   done
 #+end_src
 
@@ -260,15 +258,19 @@ So line 5654 of MS.ids.x looks screwed up; the reason is that there's
 no new line at the end of
 /data/oak/project/wtccc2/MS/illumina/exclusions/MS_illumina_UnaffectedTwins.exclude.txt
 
-***** TODO Numbers
-#+begin_example 
-grep -vF NA 22-MS.wNA.xidx | sort -n > 22-MS-tmp && mv 22-MS-tmp 22-MS.xidx
+***** DONE Numbers
+#+begin_example
+echo num lines: `grep -vF NA 22-MS.wNA.xidx | sort -n | wc -l`
+num lines: 5687
+grep -vF NA 22-MS.wNA.xidx | sort -n > 22-MS.xidx
 columns -s -v -f 22-MS.xidx < 22-MSr.gen > 22-MSx.gen
 sed 1,2d /data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample | cut -d ' ' -f 1 | slice -v --line-file 22-MS.xidx > 22-MSx.ids
 mv 22-MSr.sample 22-MSx.sample
 #+end_example
 
 So 5687 should have been removed from MS, leaving us with 11376-5687 = 5689
+
+Which is correct. The problem is the 5288 in 22-MSx.ids
 
 #+begin_src sh
 echo -n "To_exclude "
@@ -278,7 +280,7 @@ echo -n "Indices_to_be_excluded "
 wc -l 22-MS.wNA.xidx
 
 echo -n "Indices_to_be_excluded_wo_NA "
-wc -l 22-MS.xidx
+wc -l 22-MS.xids
 
 echo -n "Included_IDs "
 wc -l 22-MSx.ids
@@ -288,11 +290,18 @@ echo -n "Num_indivs_in_gen_file "
 #+end_src
 
 #+results:
-| To_exclude                   |  5688 | 22-MS.xids     |
-| Indices_to_be_excluded       |  5688 | 22-MS.wNA.xidx |
-| Indices_to_be_excluded_wo_NA | 17061 | 22-MS.xidx     |
-| Included_IDs                 |  5288 | 22-MSx.ids     |
-| Num_indivs_in_gen_file       |  5689 |                |
+| To_exclude                   | 5688 | 22-MS.xids     |
+| Indices_to_be_excluded       | 5688 | 22-MS.wNA.xidx |
+| Indices_to_be_excluded_wo_NA | 5688 | 22-MS.xids     |
+| Included_IDs                 | 5689 | 22-MSx.ids     |
+| Num_indivs_in_gen_file       | 5689 |                |
+
+#+begin_src R
+5688*3
+#+end_src
+
+#+results:
+: 17064
 
 **** PoBI
 ***** Unrecognised individs
@@ -322,7 +331,7 @@ This 5565 is the number of indivs in MS/exclusions.all, so that makes sense.
 : Number of individs to be excluded:  5899
 : Of these number recognised:  334
 
-***** TODO Numbers
+***** DONE Numbers
 #+begin_example
 grep -vF NA 22-POBI.wNA.xidx | sort -n > 22-POBI-tmp && mv 22-POBI-tmp 22-POBI.xidx
 columns -s -v -f 22-POBI.xidx < 22-POBIr.gen > 22-POBIx.gen
@@ -330,7 +339,7 @@ sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut
 mv 22-POBIr.sample 22-POBIx.sample
 #+end_example
 
-So 334 should have been removed from MS, leaving us with src_R{2912-334} = 2578.
+So 334 should have been removed from POBI, leaving us with src_R{2912-334} = 2578.
 
 #+begin_src sh
 ~/bin/numindivs-gen 22-POBIx.gen
@@ -339,7 +348,7 @@ wc -l 22-POBIx.ids
 
 #+results:
 | 2578 |              |
-| 2636 | 22-POBIx.ids |
+| 2578 | 22-POBIx.ids |
 
 *** Combine across cohorts
 #+begin_example 
@@ -367,7 +376,7 @@ wc -l *.ids
 |  7924 | 22-allx.ids  |
 | 15848 | total        |
 
-* Prepare data set for phasing
+* DONE Prepare data set for phasing
 ** Environment
 #+begin_src sh
   cd data/HM3
@@ -1445,24 +1454,44 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
   POBI+MS files have 8267 individuals
 
   #+begin_src R :results output
-    system(paste("~/bin/numindivs-gen", datafile("22", "w")))
+  system(paste("~/bin/numindivs-gen", datafile("22", "w")))
+  
+  system("wc -l 22-MSx.ids")
   #+end_src
 
   #+results:
-  : 8267
+  : head: cannot open `data/POBI+MS/22-allx.gen' for reading: No such file or directory
+  : -1
+  : wc: 22-MS.ids: No such file or directory
 
 * TODO Validate phasing
 ** Allele frequencies should be the same!
 ** Distribution of identical stretch lengths
 #+begin_src R
-  identical.stretches <- function(hap1, hap2) {
+  identical.stretch.lengths <- function(hap1, hap2) {
       r <- rle(hap1 == hap2)
       r$lengths[r$values]
   }
 #+end_src
-*** Compare Orkney vs Norway and Spain vs Norway
-#+begin_src R
 
+
+*** Compare Orkney vs Norway and Spain vs Norway
+#+begin_src R :chrom=22
+  indivs.d <- pobi.ms.read.samplefile()
+  pop1 <- "NOR"
+  haps <- read.haplotypes(hapfile, ids)
+  h1 <- extract.haplotypes(pop1, haps, indivs.d)
+  
+  id.lengths <- list()
+  for(pop2 in c("ORK","SPA")) {
+      h2 <- extract.haplotypes(pop2, haps, indivs.d)
+      for(i in 1:n1) {
+          for(j in 1:n2) {
+              id.lengths[[pop1]][[pop2]][[i]][[j]] <- identical.stretch.lengths(h1, h2)
+              save(id.lengths, file="id-lengths.rda")
+          }
+      }
+  }
 #+end_src
     
 * PCA
@@ -1490,5 +1519,5 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
 : total size is 612863  speedup is 2063.51
 
 # Local Variables=
-# org-babel-default-header-args:R= ((:session . "*R-PoBI*"))
-# End:
+# org-babel-default-header-args:R=((:session . "*R-PoBI*"))
+# End=
