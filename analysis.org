@@ -3,8 +3,7 @@
 
 * Environment
 ** Org
----+ ---babel:    :dir /davison@oak.well.ox.ac.uk:~/bench
-#+babel:    :dir ~/bench
+#+babel:    :dir /davison@oak.well.ox.ac.uk:~/bench
 #+options: ^:{}
 
 #+begin_src emacs-lisp :cache no
@@ -22,8 +21,10 @@
 
 ** R environment
 #+begin_src R :var ifile=MS-ifile :results silent
-   MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
-   colnames(MSindivs) <- "country"
+  source("lib/libpobi.R")
+  source("lib/libwtccc2.R")
+  MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
+  colnames(MSindivs) <- "country"
 #+end_src
 
 * DONE MS exclusions
@@ -1474,7 +1475,6 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
   }
 #+end_src
 
-
 *** Compare Orkney vs Norway and Spain vs Norway
 #+begin_src R :chrom=22
   indivs.d <- pobi.ms.read.samplefile()
@@ -1493,7 +1493,6 @@ Process R:2 killed at Sat Aug 14 07:38:23 2010
       }
   }
 #+end_src
-    
 * PCA
 #+begin_src sh
   cd data/POBI+MS
