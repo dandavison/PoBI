@@ -11,3 +11,21 @@ wtccc2.read.chiamo <- function(platform, chrom, cols) {
     on.exit(close(p))
     read.table(p, as.is=TRUE)
 }
+
+is.same.strand <- function(alleles1, alleles2) {
+    ## At this stage the allele frequencies correspond; although the
+    ## two data sets may be referring to different strands. Return
+    ## logical vector of same strand indicators
+
+    ## alleles1 is 2xL character matrix
+
+    flip <- function(pair) c(A="T", C="G", G="C", T="A")[pair]
+    alleles1.f <- apply(alleles1, 2, flip)
+
+    id <- alleles1 == alleles2
+    id.f <- alleles1.f == alleles2
+    noflip <- colSums(id) == 2
+    flip <- colSums(id.f) == 2
+    stopifnot(xor(flip, noflip))
+    noflip
+}

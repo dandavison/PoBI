@@ -423,7 +423,7 @@ wc -l *.ids
   rmapfile <- function(chr, dataset)
       sprintf("rmap/%s-%s.map", dataset, chr)
   rstrandfile <- function(chr, dataset)
-      sprintf("rstrand/%s-%s.strand", dataset, chr)
+      sprintf("rstrand/%s", chr)
   frdatafile <- function(chr, dataset)
       sprintf("frdata/%s-%s.%s", dataset, chr,
               if(dataset == "w") "gen" else "hap")
@@ -582,6 +582,22 @@ We're going to flip WTCCC2 to match HapMap3
 
 #+results:
 : 0
+*** Create strand indicators
+#+source: create-strand-indicators
+#+begin_src R
+  for(c in chroms) {
+      w <- pipe(paste("cut -d' ' -f4-5 <", frdatafile(c, "w")))
+      h <- pipe(paste("cut -d' ' -f3-4 <", rlegendfile(c, "h")))
+      w <- matrix(scan(w, what=""), nrow=2)
+      h <- matrix(scan(h, what=""), nrow=2)
+      strand <- ifelse(is.same.strand(w, h), "+", "-")
+      w.pos <- scan(pipe(paste("cut -d' ' -f3 <", frdatafile(c, "w"))), what=integer())
+      h.pos <- scan(pipe(paste("cut -d' ' -f2 <", rlegendfile(c, "h"))), what=integer())
+      if(any(bad <- w.pos != h.pos))
+          warning("Physical position differs for ", sum(bad), " SNPs on chromosome ", c)
+      cat(paste(w.pos, strand), sep="\n", file=file.path("rstrand", c))
+  }
+#+end_src
 
 ** DONE Check flipped data dimensions
 *** DONE Flip indicators
@@ -809,25 +825,59 @@ Functions to compute frequency of allele 0
 : 0
 
 * TODO What's going on with chromosome 1 ??
-* TODO Phasing
-  -strand_g frdata/w-$c.gen.strand \
-  #+begin_src sh
-    mkdir -p impute2/cmds impute2/out
-    
-    for c in `seq -w 1 22` ; do
-        echo \
-            impute2 \
-            -phase \
-            -m rmap/h-$c.map \
-            -h frdata/h-$c.hap \
-            -l rlegend/h-$c.legend \
-            -g frdata/w-$c.gen \
-            -int 20.4e6 20.5e6 \
-            -Ne 11418 \
-            -o impute2/out/$c \
-            > impute2/cmds/$c.sh
-    done
-  #+end_src
+* STARTED Phasing
+** Shell version
+   -strand_g frdata/w-$c.gen.strand \
+
+   -fix_strand_g \
+
+   #+begin_src sh
+     mkdir -p impute2/cmds impute2/out
+     
+     for c in `seq -w 1 21` ; do
+         echo \
+             impute2 \
+             -phase \
+             -m rmap/h-$c.map \
+             -h frdata/h-$c.hap \
+             -l rlegend/h-$c.legend \
+             -g frdata/w-$c.gen \
+             -strand_g rstrand/$c \
+             -int 20e6 24e6 \
+             -Ne 11418 \
+             -o impute2/out/$c \
+           > impute2/cmds/$c.sh
+     done
+   #+end_src
+** R version
+#+begin_src R :var chunk=4000000
+  Ne <- 11418
+  chroms <- "22"
+  for(c in chroms) {
+      outdir <- file.path("impute2", "cmds", c)
+      dir.create(outdir, recursive=TRUE)
+      ## pos <- scan(pipe(paste("cut -d' ' -f3 <", frdatafile(c, "w"))), what=integer())
+      pos <- seq(1107, 36987563, by=100)
+      starts <- seq(min(pos), max(pos), by=chunk)
+      ends <- c(starts[-1] - 1, max(pos))
+      for(i in seq_along(starts)) {
+          cmd <-
+              paste("impute2",
+                    "-phase",
+                    "-m", rmapfile(c, "h"),
+                    "-h", frdatafile(c, "h"),
+                    "-l", rlegendfile(c, "h"),
+                    "-g", frdatafile(c, "w"),
+                    "-strand_g", rstrandfile(c),
+                    "-int", starts[i], ends[i],
+                    "-Ne", Ne,
+                    "-o", file.path("impute2", "out", c, i))
+          cat(cmd, "\n", file= file.path(outdir, sprintf("%05d.sh", i)))
+      }
+  }
+  
+#+end_src
+
 * TODO Sample lists
 
   POBI+MS files have 8267 individuals
