@@ -4,6 +4,7 @@
 * Environment
 ** Org
 #+babel:    :dir /davison@oak.well.ox.ac.uk:~/bench
+#  +babel:    :dir ~/bench
 #+options: ^:{}
 
 #+begin_src emacs-lisp :cache no
@@ -379,6 +380,7 @@ wc -l *.ids
 
 * DONE Prepare data set for phasing
 ** Environment
+*** Create links to HapMap data files
 #+begin_src sh
   cd data/HM3
   for i in `seq 1 22` ; do
@@ -394,7 +396,7 @@ wc -l *.ids
           `printf "%02d" $i`.map
   done
 #+end_src
-
+*** R environment
 #+source: set-variables
 #+begin_src R
   PATH <- "/home/davison/src/shellfish/bin"
@@ -437,6 +439,7 @@ wc -l *.ids
       sprintf("flipinput/%s-%s.flip", dataset, chr)
 #+end_src
 
+*** R data frames
 #+source: set-up-data-frames
 #+begin_src R
   dd <- list()
@@ -577,11 +580,6 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 
-#+results: create-flipped-files
-: 0
-
-#+results:
-: 0
 *** Create strand indicators
 #+source: create-strand-indicators
 #+begin_src R
