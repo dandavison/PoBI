@@ -42,6 +42,8 @@ extract.haplotypes <- function(pop, haps, indivs.d) {
     haps[indivs.d[ids, pop] == pop,,drop=FALSE]
 }
 
-read.haplotypes <- function(hapfile, ids)
-    matrix(scan(hapfile, what=integer()), nrow=length(ids),
+read.haplotypes <- function(hapfile, ids) {
+    p <- pipe(paste("cut -d ' ' -f 6- <", hapfile))
+    matrix(scan(p, what=integer()), ncol=2*length(ids),
            dimnames=list(ids, NULL))
+}
