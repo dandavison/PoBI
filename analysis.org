@@ -914,25 +914,27 @@ Functions to compute frequency of allele 0
 #+results:
 
 *** Compare Orkney vs Norway and Spain vs Norway
-#+begin_src R :var chrom=22 :var nmax=20
+#+begin_src R :var chrom=22 :var nmax=200
   indivs.d <- pobi.ms.read.samplefile()
   ids <- scan(indivfile(chrom, "w"), what="")
   pop1 <- "Norway"
   haps <- read.haplotypes(hapfile(chrom, "w"), ids)
   h1 <- extract.haplotypes(pop1, haps, indivs.d)
   
+  n1 <- min(nmax,ncol(h1))
+  n2 <- min(nmax,ncol(h2))
+  
   id.lengths <- list()
+  id.lengths[[pop1]] <- list()
   for(pop2 in c("Orkney","Spain")) {
       cat(pop1, "vs", pop2, "\n")
       h2 <- extract.haplotypes(pop2, haps, indivs.d)
-      for(i in 1:min(nmax,ncol(h1))) {
-          cat(i, " ")
-          id.lengths[[pop1]][[pop2]][[i]] <- list()
-          for(j in 1:min(nmax,ncol(h2)))
-              id.lengths[[pop1]][[pop2]][[i]][[j]] <- identical.stretch.lengths(h1[,i], h2[,j])
-          save(id.lengths, file="id-lengths.rda")
-      }
-      cat("\n")
+      grid <- expand.grid(i=1:n1, j=1:n2)
+      id.lengths[[pop1]][[pop2]] <-
+          mapply(function(i,j) {
+              if(j %% 10 == 0 && i == 1) cat(i, j, "\n")
+              identical.stretch.lengths(h1[,i], h2[,j])
+          }, grid$i, grid$j)
   }
   
 #+end_src
