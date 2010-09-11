@@ -399,53 +399,55 @@ wc -l *.ids
 *** R environment
 #+source: set-variables
 #+begin_src R
-    PATH <- "/home/davison/src/shellfish/bin"
-    system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs")
-    
-    chroms <- sprintf("%02d", 1:22)
-    nwtccc2 <- 8267
-    
-    datafile <- function(chr, dataset=c("h","w"))
-        switch(match.arg(dataset),
-               h = sprintf("data/HM3/%s.hap", chr),
-               w = sprintf("data/POBI+MS/%s-allx.gen", chr))
-    legendfile <- function(chr, dataset=c("h","w"))
-        switch(match.arg(dataset),
-               h = sprintf("data/HM3/%s.legend", chr),
-               w = error("No need for this"))
-    mapfile <- function(chr, dataset=c("h","w"))
-        switch(match.arg(dataset),
-               h = sprintf("data/HM3/%s.map", chr),
-               w = error("No need for this"))
-    indivfile <- function(chr, dataset=c("h","w"))
-        switch(match.arg(dataset),
-               w = sprintf("data/POBI+MS/%s-allx.ids", chr),
-               h = error("No need for this"))
-    rdatafile <- function(chr, dataset)
-        sprintf("rdata/%s-%s.%s", dataset, chr,
-                if(dataset == "w") "gen" else "hap")
-    rlegendfile <- function(chr, dataset)
-        sprintf("rlegend/%s-%s.legend", dataset, chr)
-    rmapfile <- function(chr, dataset)
-        sprintf("rmap/%s-%s.map", dataset, chr)
-    rstrandfile <- function(chr, dataset)
-        sprintf("rstrand/%s", chr)
-    frdatafile <- function(chr, dataset)
-        sprintf("frdata/%s-%s.%s", dataset, chr,
-                if(dataset == "w") "gen" else "hap")
-    linesfile <- function(chr, dataset)
-        sprintf("lines/%s-%s.lines", dataset, chr)
-    freqfile <- function(chr, dataset)
-        sprintf("freq/%s-%s.freq", dataset, chr)
-    flipindfile <- function(chr, dataset)
-        sprintf("flipind/%s-%s.flip", dataset, chr)
-    flipinputfile <- function(chr, dataset)
-        sprintf("flipinput/%s-%s.flip", dataset, chr)
-    indivfile <- function(chr, dataset=c("h","w"))
-        switch(match.arg(dataset),
-               w = sprintf("impute2/out/%s_hap", chr),
-               h = error("No need for this"))
+  PATH <- "/home/davison/src/shellfish/bin"
+  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs")
+  
+  chroms <- sprintf("%02d", 1:22)
+  nwtccc2 <- 8267
+  
+  datafile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.hap", chr),
+             w = sprintf("data/POBI+MS/%s-allx.gen", chr))
+  legendfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.legend", chr),
+             w = error("No need for this"))
+  mapfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.map", chr),
+             w = error("No need for this"))
+  indivfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("data/POBI+MS/%s-allx.ids", chr),
+             h = error("No need for this"))
+  rdatafile <- function(chr, dataset)
+      sprintf("rdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else "hap")
+  rlegendfile <- function(chr, dataset)
+      sprintf("rlegend/%s-%s.legend", dataset, chr)
+  rmapfile <- function(chr, dataset)
+      sprintf("rmap/%s-%s.map", dataset, chr)
+  rstrandfile <- function(chr, dataset)
+      sprintf("rstrand/%s", chr)
+  frdatafile <- function(chr, dataset)
+      sprintf("frdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else "hap")
+  linesfile <- function(chr, dataset)
+      sprintf("lines/%s-%s.lines", dataset, chr)
+  freqfile <- function(chr, dataset)
+      sprintf("freq/%s-%s.freq", dataset, chr)
+  flipindfile <- function(chr, dataset)
+      sprintf("flipind/%s-%s.flip", dataset, chr)
+  flipinputfile <- function(chr, dataset)
+      sprintf("flipinput/%s-%s.flip", dataset, chr)
+  hapfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("impute2/out/%s_haps", chr),
+             h = error("No need for this"))
 #+end_src
+
+#+results: set-variables
 
 *** R data frames
 #+source: set-up-data-frames
@@ -909,25 +911,34 @@ Functions to compute frequency of allele 0
   }
 #+end_src
 
+#+results:
+
 *** Compare Orkney vs Norway and Spain vs Norway
-#+begin_src R :var chrom=22
+#+begin_src R :var chrom=22 :var nmax=20
   indivs.d <- pobi.ms.read.samplefile()
   ids <- scan(indivfile(chrom, "w"), what="")
-  pop1 <- "NOR"
-  haps <- read.haplotypes(hapfile(chrom), ids)
+  pop1 <- "Norway"
+  haps <- read.haplotypes(hapfile(chrom, "w"), ids)
   h1 <- extract.haplotypes(pop1, haps, indivs.d)
   
   id.lengths <- list()
-  for(pop2 in c("ORK","SPA")) {
+  for(pop2 in c("Orkney","Spain")) {
+      cat(pop1, "vs", pop2, "\n")
       h2 <- extract.haplotypes(pop2, haps, indivs.d)
-      for(i in 1:n1) {
-          for(j in 1:n2) {
-              id.lengths[[pop1]][[pop2]][[i]][[j]] <- identical.stretch.lengths(h1, h2)
-              save(id.lengths, file="id-lengths.rda")
-          }
+      for(i in 1:min(nmax,ncol(h1))) {
+          cat(i, " ")
+          id.lengths[[pop1]][[pop2]][[i]] <- list()
+          for(j in 1:min(nmax,ncol(h2)))
+              id.lengths[[pop1]][[pop2]][[i]][[j]] <- identical.stretch.lengths(h1[,i], h2[,j])
+          save(id.lengths, file="id-lengths.rda")
       }
+      cat("\n")
   }
+  
 #+end_src
+
+#+results:
+
 * PCA
 #+begin_src sh
   cd data/POBI+MS
