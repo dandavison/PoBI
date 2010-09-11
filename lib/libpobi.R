@@ -37,12 +37,15 @@ pobi.ms.read.samplefile <- function()
           ms.read.samplefile())
 
 extract.haplotypes <- function(pop, haps, indivs.d) {
-    ids <- row.names(haps)
+    ## Extract all haplotypes from region POP.
+    ids <- colnames(haps)
     stopifnot(ids %in% rownames(indivs.d))
-    haps[indivs.d[ids, pop] == pop,,drop=FALSE]
+    select <- indivs.d[ids, "reg"] == pop
+    haps[, select, drop=FALSE]
 }
 
 read.haplotypes <- function(hapfile, ids) {
+    ## Return L x 2n binary matrix
     p <- pipe(paste("cut -d ' ' -f 6- <", hapfile))
     matrix(scan(p, what=integer()), ncol=2*length(ids),
            dimnames=list(NULL, rep(ids, each=2)))
