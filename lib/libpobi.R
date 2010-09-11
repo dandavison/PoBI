@@ -25,7 +25,7 @@ ms.read.samplefile <- function(platform="illumina") {
     d <- wtccc2.read.samplefile("MS", platform)
     MS.info.file <- "data/MS/MS_illumina.sample.geoinfoIII"
     MS.info <- read.table(MS.info.file, header=TRUE, row.names=2)[-1]
-    map <- match(d$id1, rownames(MS.info))
+    map <- match(rownames(d), rownames(MS.info))
     if(any(noinfo <- is.na(map)))
         warning(sum(noinfo), " individuals are absent from ", MS.info.file)
     d$reg <- factor(MS.info$geo.info[map])
