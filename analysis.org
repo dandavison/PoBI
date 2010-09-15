@@ -445,6 +445,10 @@ wc -l *.ids
       switch(match.arg(dataset),
              w = sprintf("impute2/out/%s_haps", chr),
              h = error("No need for this"))
+  posfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("pos/%s", chr),
+             h = error("No need for this"))
 #+end_src
 
 #+results: set-variables
@@ -859,14 +863,48 @@ Functions to compute frequency of allele 0
    #+end_src
 ** R version
 #+begin_src R :var chunk=4000000
+  make.intervals <- function(points, width, noverlap=100) {
+      ## Return intervals with at least noverlap overlapping points at each end
+      stop("unfinished")
+      
+      starts <- ends <- integer()
+      i <- 1
+      starts[i] <- points[1]
+      while(TRUE) {
+          ends[i] <- starts[i] + width
+          n <- sum(points >= starts[i] & points <= ends[i])
+      }
+  
+  }
+  
+  make.pos.files <- function() {
+      dir.create("pos")
+      for(c in chroms) {
+          pos <- scan(pipe(paste("cut -d' ' -f3 <", frdatafile(c, "w"))), what=integer())
+          cat(pos, file=file.path("pos", c), sep="\n")
+      }
+  }
+  
+  qsub.script <- function(cmd, name, outfile, errfile)
+      paste("#$ -N ", name, "\n",
+            "#$ -o ", outfile, "\n",
+            "#$ -e ", errfile, "\n",
+            "#$ -cwd", "\n",
+            "#$ -V", "\n",
+            cmd, "\n",
+            sep="")
+  
   Ne <- 11418
-  chroms <- "22"
   for(c in chroms) {
       outdir <- file.path("impute2", "cmds", c)
+      stdoutdir <- file.path("impute2", "stdout", c)
+      stderrdir <- file.path("impute2", "stderr", c)
       dir.create(outdir, recursive=TRUE)
-      ## pos <- scan(pipe(paste("cut -d' ' -f3 <", frdatafile(c, "w"))), what=integer())
-      pos <- seq(1107, 36987563, by=100)
+      dir.create(stdoutdir, recursive=TRUE)
+      dir.create(stderrdir, recursive=TRUE)
+      pos <- scan(posfile(c, "w"))
       starts <- seq(min(pos), max(pos), by=chunk)
+      if(overlap)
       ends <- c(starts[-1] - 1, max(pos))
       for(i in seq_along(starts)) {
           cmd <-
@@ -880,11 +918,17 @@ Functions to compute frequency of allele 0
                     "-int", starts[i], ends[i],
                     "-Ne", Ne,
                     "-o", file.path("impute2", "out", c, i))
-          cat(cmd, "\n", file= file.path(outdir, sprintf("%05d.sh", i)))
+          cat(qsub.script(cmd,
+                          name=sprintf("%s-%s-%03d", "i2", c, i),
+                          outfile=file.path(stdoutdir, i),
+                          errfile=file.path(stderrdir, i)),
+              file=file.path(outdir, sprintf("%03d.sh", i)))
       }
   }
   
 #+end_src
+
+#+results:
 
 * TODO Sample lists
 
@@ -914,7 +958,7 @@ Functions to compute frequency of allele 0
 #+results:
 
 *** Compare Orkney vs Norway and Spain vs Norway
-#+begin_src R :var chrom=22 :var nmax=200
+#+begin_src R :var chrom=22 :var nmax=99999
   indivs.d <- pobi.ms.read.samplefile()
   ids <- scan(indivfile(chrom, "w"), what="")
   pop1 <- "Norway"
@@ -934,13 +978,138 @@ Functions to compute frequency of allele 0
           mapply(function(i,j) {
               if(j %% 10 == 0 && i == 1) cat(i, j, "\n")
               identical.stretch.lengths(h1[,i], h2[,j])
-          }, grid$i, grid$j)
+          }, grid$i, grid$j, SIMPLIFY=FALSE)
   }
-  
 #+end_src
 
 #+results:
 
+* TODO Create Garrett input files
+** email
+#+begin_example 
+From: Garrett Hellenthal <ghellenthal@gmail.com>
+Subject: Re: this week
+Date: Fri, 18 Jun 2010 12:24:27 +0100
+To: Dan Davison <davison@stats.ox.ac.uk>
+
+Hi Dan -
+
+I've attached example input files, for an analysis painting the Basque HGDP
+haplotypes as a mosaic of the other HGDP European populations' "donor"
+haplotypes (I think for chromo 22). There are 3 files. We probably want to
+have one set of haplotype and recomrate files per chromosome.
+
+The haplotype input format (e.g. "BasqueCondOnEurope.phase.inp") is
+PHASE-input style, but with an additional line at the top noting how many of
+the haplotypes in the file are to be used as donors. Also, these X "donor
+haplotypes" should be the in the first X rows of haplotypes in the file.
+These should be ordered such that the first X_1 donor haplotypes are from
+donor population 1 (with every two haplotype lines from a single donor
+individual), the next X_2 donor haplotypes from population 2, etc.... The
+remaining haplotypes in the file should be from the recipient individuals
+(in our case the POBI inds), again with every two consecutive haplotypes an
+individual. Alleles should be 0 or 1.
+
+In case you haven't worked with PHASE much before, the PHASE-ish file format
+I use is as follows:
+
+num.donorhaps
+num.total.inds
+num.snps
+P positions.vector
+SSSS....SSS <-- repeated "num.snps" times
+donorhap_1
+donorhap_2
+donorhap_3
+.
+.
+donorhap_{ndonorhaps}
+recipienthap_1
+.
+.
+recipienthap_{2*nind-ndonorhaps}
+
+For example, if there are 60 donor haps and 20 POBI haps at 5 snps (with
+basepair positions 100,...,500), the file should be:
+
+60
+40
+5
+P 100 200 300 400 500
+SSSSS
+00100
+01000
+(etc)
+
+There are two other files I need as well: one (a) specifying recombination
+rate, and one (b) specifying the donor populations.
+
+For (a), e.g. "BasqueCondOnEurope.recomrates", there should be two columns,
+one giving basepair positions and the other giving the recombination rate
+(the probability of recombination per generation per basepair) between the
+basepair in its row and the basepair in the next row. (This is equivalent to
+the total genetic distance in Morgans between these two basepairs divided by
+the total physical distance between the two.) There should also be a header
+file (see attached).
+
+For (b), e.g. "BasqueCondOnEurope.donorlist", there should be one row per
+donor population and two columns: one giving the population name and the
+other giving the number of haplotypes from that pop.
+
+let me know if you have any questions -- sounds like things are moving along
+then!
+Garrett
+
+
+
+On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
+
+> Hi Garrett, could you tell me exactly what input files
+> your software uses?
+> Dan
+>
+> Garrett Hellenthal <ghellenthal@gmail.com> writes:
+>
+> > Hi Dan -
+> >
+> > Not sure how this ended up last week -- are you set up for phasing
+> > now? Did you settle on HapMap Phase II vs Phase III?
+> >
+> > Garrett
+> >
+> >
+> > On Tue, Jun 1, 2010 at 1:02 PM, Garrett Hellenthal
+> > <ghellenthal@gmail.com> wrote:
+> >> If I'm not there, I may be up on the top floor rec area finishing lunch!
+> >> Garrett
+> >>
+> >>
+> >> On Tue, Jun 1, 2010 at 12:51 PM, Garrett Hellenthal
+> >> <ghellenthal@gmail.com> wrote:
+> >>> It's on the 2nd floor, room 30.09. It's on the side of the building
+> >>> opposite where Peter's office is.
+> >>>
+> >>> see you then,
+> >>> Garrett
+> >>>
+> >>>
+> >>> On Tue, Jun 1, 2010 at 12:48 PM, Dan Davison <davison@stats.ox.ac.uk>
+> wrote:
+> >>>> Garrett Hellenthal <ghellenthal@gmail.com> writes:
+> >>>>
+> >>>>> Can we do 2:30 instead? Not sure when in 3-4 I'm meeting with Peter,
+> >>>>
+> >>>> Sure, see you at 2:30. Where will you be (where's your office)?
+> >>>>
+> >>>
+> >>
+>
+[2. application/octet-stream; BasqueCondOnEurope.donorlist]...
+
+[3. application/x-gzip; BasqueCondOnEurope.phase.inp.gz]...
+
+[4. application/octet-stream; BasqueCondOnEurope.recomrates]...
+#+end_example
 * PCA
 #+begin_src sh
   cd data/POBI+MS
