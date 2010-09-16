@@ -14,21 +14,76 @@
 #+results:
 | (:session . *R-PoBI*) |
 
+** R environment
+#+source: set-variables
+#+begin_src R :var ifile=MS-ifile :results silent
+  source("lib/libpobi.R")
+  source("lib/libwtccc2.R")
+
+  PATH <- "/home/davison/src/shellfish/bin"
+  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs")
+  
+  chroms <- sprintf("%02d", 1:22)
+  nwtccc2 <- 8267
+  
+  datafile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.hap", chr),
+             w = sprintf("data/POBI+MS/%s-allx.gen", chr))
+  legendfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.legend", chr),
+             w = error("No need for this"))
+  mapfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             h = sprintf("data/HM3/%s.map", chr),
+             w = error("No need for this"))
+  indivfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("data/POBI+MS/%s-allx.ids", chr),
+             h = error("No need for this"))
+  rdatafile <- function(chr, dataset)
+      sprintf("rdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else "hap")
+  rlegendfile <- function(chr, dataset)
+      sprintf("rlegend/%s-%s.legend", dataset, chr)
+  rmapfile <- function(chr, dataset)
+      sprintf("rmap/%s-%s.map", dataset, chr)
+  rstrandfile <- function(chr, dataset)
+      sprintf("rstrand/%s", chr)
+  frdatafile <- function(chr, dataset)
+      sprintf("frdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else "hap")
+  linesfile <- function(chr, dataset)
+      sprintf("lines/%s-%s.lines", dataset, chr)
+  freqfile <- function(chr, dataset)
+      sprintf("freq/%s-%s.freq", dataset, chr)
+  flipindfile <- function(chr, dataset)
+      sprintf("flipind/%s-%s.flip", dataset, chr)
+  flipinputfile <- function(chr, dataset)
+      sprintf("flipinput/%s-%s.flip", dataset, chr)
+  hapfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("impute2/out/%s_haps", chr),
+             h = sprintf("data/HM3/%s.hap", chr))
+  posfile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("pos/%s", chr),
+             h = error("No need for this"))
+#+end_src
+
+* DONE MS exclusions
+#+begin_src R
+  MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
+  colnames(MSindivs) <- "country"
+#+end_src
 ** Variables
 #+source: MS-ifile
 #+begin_src emacs-lisp :results silent
 "data/MS/MS_illumina.sample.geoinfoIII"
 #+end_src
 
-** R environment
-#+begin_src R :var ifile=MS-ifile :results silent
-  source("lib/libpobi.R")
-  source("lib/libwtccc2.R")
-  MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
-  colnames(MSindivs) <- "country"
-#+end_src
 
-* DONE MS exclusions
 ** Select countries
 #+tblname: include-countries
 | Country |    n |
@@ -396,63 +451,6 @@ wc -l *.ids
           `printf "%02d" $i`.map
   done
 #+end_src
-*** R environment
-#+source: set-variables
-#+begin_src R
-  PATH <- "/home/davison/src/shellfish/bin"
-  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs")
-  
-  chroms <- sprintf("%02d", 1:22)
-  nwtccc2 <- 8267
-  
-  datafile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             h = sprintf("data/HM3/%s.hap", chr),
-             w = sprintf("data/POBI+MS/%s-allx.gen", chr))
-  legendfile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             h = sprintf("data/HM3/%s.legend", chr),
-             w = error("No need for this"))
-  mapfile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             h = sprintf("data/HM3/%s.map", chr),
-             w = error("No need for this"))
-  indivfile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             w = sprintf("data/POBI+MS/%s-allx.ids", chr),
-             h = error("No need for this"))
-  rdatafile <- function(chr, dataset)
-      sprintf("rdata/%s-%s.%s", dataset, chr,
-              if(dataset == "w") "gen" else "hap")
-  rlegendfile <- function(chr, dataset)
-      sprintf("rlegend/%s-%s.legend", dataset, chr)
-  rmapfile <- function(chr, dataset)
-      sprintf("rmap/%s-%s.map", dataset, chr)
-  rstrandfile <- function(chr, dataset)
-      sprintf("rstrand/%s", chr)
-  frdatafile <- function(chr, dataset)
-      sprintf("frdata/%s-%s.%s", dataset, chr,
-              if(dataset == "w") "gen" else "hap")
-  linesfile <- function(chr, dataset)
-      sprintf("lines/%s-%s.lines", dataset, chr)
-  freqfile <- function(chr, dataset)
-      sprintf("freq/%s-%s.freq", dataset, chr)
-  flipindfile <- function(chr, dataset)
-      sprintf("flipind/%s-%s.flip", dataset, chr)
-  flipinputfile <- function(chr, dataset)
-      sprintf("flipinput/%s-%s.flip", dataset, chr)
-  hapfile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             w = sprintf("impute2/out/%s_haps", chr),
-             h = sprintf("data/HM3/%s.hap", chr))
-  posfile <- function(chr, dataset=c("h","w"))
-      switch(match.arg(dataset),
-             w = sprintf("pos/%s", chr),
-             h = error("No need for this"))
-#+end_src
-
-#+results: set-variables
-
 *** R data frames
 #+source: set-up-data-frames
 #+begin_src R
@@ -528,7 +526,6 @@ We're going to flip WTCCC2 to match HapMap3
   make.pos.files()
 #+end_src
 
-  
 ** DONE Check restricted data dimensions
 
 #+begin_src sh :colnames yes
