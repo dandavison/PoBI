@@ -116,6 +116,10 @@ stitch.haplotypes <- function(files, ids, outfile, thresh=.9) {
 
         for(i in 1:n) {
             ii <- 2*(i-1)
+
+            ## Check that genotypes are identical
+            stopifnot(rowSums(o1[,ii+(1:2)]) == rowSums(o2[,ii+(1:2)]))
+            
             p11 <- mean(o1[,ii + 1] == o2[,ii + 1])
             p12 <- mean(o1[,ii + 1] == o2[,ii + 2])
             p21 <- mean(o1[,ii + 2] == o2[,ii + 1])
