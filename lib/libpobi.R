@@ -1,7 +1,7 @@
 pobi.read.samplefile <- function(platform="illumina") {
     d <- wtccc2.read.samplefile("POBI", platform)
     manifest <- pobi.read.manifest()
-    reg <- manifest[d$id2,"GEOGRAPHICAL.REGION"]
+    reg <- manifest[d$ID_2,"GEOGRAPHICAL.REGION"]
     reg[is.na(reg)] <- "NA"
     d$reg <- factor(reg)
     d
@@ -60,7 +60,7 @@ read.haplotypes.legend <- function(hapfile, ids) {
 
 read.chiamo.legend <- function(chiamofile)
     read.table(pipe(paste("cut -d' ' -f1-5 <", chiamofile)),
-               col.names=c("id1","id2","pos", "allele1", "allelel2"),
+               col.names=c("ID_1","ID_2","pos", "allele1", "allelel2"),
                as.is=TRUE)
 
 make.intervals <- function(points, width, overlap) {
@@ -100,11 +100,11 @@ stitch.haplotypes <- function(files, ids, outfile, thresh=.9) {
         n1 <- nrow(leg1)
 
         ## Identify overlapping SNPs
-        stopifnot(leg2$id2[1] %in% leg1$id2)
-        olap <- which(leg2$id2[1] == leg1$id2)
+        stopifnot(leg2$ID_2[1] %in% leg1$ID_2)
+        olap <- which(leg2$ID_2[1] == leg1$ID_2)
         o1.idx <- olap:n1
         o2.idx <- 1:(n1-olap+1)
-        stopifnot(leg1$id2[o1.idx] == leg2$id2[o2.idx])
+        stopifnot(leg1$ID_2[o1.idx] == leg2$ID_2[o2.idx])
         
         ## Form column index vector matching haplotypes
         o1 <- haps1[o1.idx,,drop=FALSE]
