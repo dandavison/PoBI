@@ -1,7 +1,8 @@
 wtccc2.read.samplefile <- function(coh, platform) {
     file <- file.path("data/wtccc2", coh, platform, "calls", sprintf("%s_%s.sample", coh, platform))
-    d <- read.table(file, row.names=1, skip=2)[, 1:2, drop=FALSE]
-    colnames(d) <- c("id2", "missing")
+    d <- read.table(file, skip=2)[, 1:3, drop=FALSE]
+    colnames(d) <- c("ID_1", "ID_2", "missing")
+    rownames(d) <- d$ID_1
     d
 }
 
