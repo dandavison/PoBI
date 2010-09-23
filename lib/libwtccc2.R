@@ -6,6 +6,17 @@ wtccc2.read.samplefile <- function(coh, platform) {
     d
 }
 
+wtccc2.write.samplefile <- function(d, file, datatypes) {
+    stopifnot(ncol(d) >= 3, colnames(d)[1:3] == c("ID_1","ID_2","missing"))
+    if(missing(datatypes))
+        datatypes <- c(rep("0",3), rep("C", ncol(d)-3))
+    else
+        stopifnot(datatypes[1:3] == "0")
+    write.table(d[FALSE,], file, col.names=TRUE, row.names=FALSE, quote=FALSE)
+    cat(datatypes, "\n", file=file, append=TRUE)
+    write.table(d, file, col.names=FALSE, row.names=FALSE, quote=FALSE, append=TRUE)
+}
+
 wtccc2.read.chiamo <- function(platform, chrom, cols) {
     p <- pipe(sprintf("zcat data/wtccc2/POBI/%s/calls/POBI_%s_%s.gen.gz | cut -d' ' -f%s",
                       platform, chrom, platform, paste(cols, collapse=",")))
