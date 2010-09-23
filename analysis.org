@@ -3,8 +3,7 @@
 
 * Environment
 ** Org
-#+babel:    :dir /davison@oak.well.ox.ac.uk:~/bench
-#  +babel:    :dir ~/bench
+#+babel:   :dir /davison@oak.well.ox.ac.uk:~/bench :results output silent
 #+options: ^:{}
 
 #+begin_src emacs-lisp :cache no
@@ -16,12 +15,12 @@
 
 ** R environment
 #+source: set-variables
-#+begin_src R :var ifile=MS-ifile :results silent
+#+begin_src R :var ifile=MS-ifile
   source("lib/libpobi.R")
   source("lib/libwtccc2.R")
-
+  
   PATH <- "/home/davison/src/shellfish/bin"
-  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs")
+  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
   
   chroms <- sprintf("%02d", 1:22)
   nwtccc2 <- 8267
@@ -33,15 +32,19 @@
   legendfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              h = sprintf("data/HM3/%s.legend", chr),
-             w = error("No need for this"))
+             w = stop("No need for this"))
   mapfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              h = sprintf("data/HM3/%s.map", chr),
-             w = error("No need for this"))
-  indivfile <- function(chr, dataset=c("h","w"))
+             w = stop("No need for this"))
+  individfile <- function(dataset=c("h","w"))
       switch(match.arg(dataset),
-             w = sprintf("data/POBI+MS/%s-allx.ids", chr),
-             h = error("No need for this"))
+             w = sprintf("data/POBI+MS/01-allx.ids"),
+             h = stop("No need for this"))
+  indivsamplefile <- function(dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("indivs/indivs.sample"),
+             h = stop("No need for this"))
   rdatafile <- function(chr, dataset)
       sprintf("rdata/%s-%s.%s", dataset, chr,
               if(dataset == "w") "gen" else "hap")
@@ -69,7 +72,15 @@
   posfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              w = sprintf("pos/%s", chr),
-             h = error("No need for this"))
+             h = stop("No need for this"))
+  snpexcludefile <- function(chr, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("snpexclude/%s", chr),
+             h = stop("No need for this"))
+  indivexcludefile <- function(pop, dataset=c("h","w"))
+      switch(match.arg(dataset),
+             w = sprintf("indivexclude/%s", pop),
+             h = stop("No need for this"))
 #+end_src
 
 * DONE MS exclusions
@@ -833,6 +844,17 @@ Functions to compute frequency of allele 0
 | rs#       | chrom |      pos | strand | build    | ref_allele | ref-allele_freq | ref-allele_count | other_allele | other-freq | other-allele_count |
 | rs2236639 | chr22 | 15452483 | +      | ncbi_b36 | A          |           0.084 |               19 | G            |      0.916 |                207 |
 
+** SNP QC
+#+begin_src sh
+  qctool -g w-#.gen \
+      -write-snp-excl-list \
+      -info .975 1 \
+      -hwe 20 \
+      -maf 0 .001 \
+      -snp-missing-rate .02
+
+#+end_src
+
 ** Babel script
 #+begin_src R :noweb yes
   <<set-variables()>>
@@ -848,39 +870,38 @@ Functions to compute frequency of allele 0
 
 * TODO What's going on with chromosome 1 ??
 * STARTED Phasing
-** Shell version
-   -strand_g frdata/w-$c.gen.strand \
+** Sample files and per-population exclude files
+#+begin_src R
+  indivs.d <- pobi.ms.read.samplefile()
+  ids <- scan(indivfile("w"), what="")
+  stopifnot(ids %in% rownames(indivs.d))
+  indivs.d <- indivs.d[ids,]
+  indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
+  indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
+  write.table(cbind(rownames(indivs.d),indivs.d), file=indivsamplefile("w"),
+              col.names=c("ID_1", colnames(indivs.d)), row.names=FALSE, quote=FALSE)
+  for(pop in levels(indivs.d$reg2)) {
+      ids.notpop <- rownames(subset(indivs.d, reg2 != pop))
+      cat(ids.notpop, sep="\n", file=indivexcludefile(pop, "w"))
+  }
+  cat("", file=indivexcludefile("all", "w"))
+#+end_src
 
-   -fix_strand_g \
-
-   #+begin_src sh
-     mkdir -p impute2/cmds impute2/out
-     
-     for c in `seq -w 1 21` ; do
-         echo \
-             impute2 \
-             -phase \
-             -m rmap/h-$c.map \
-             -h frdata/h-$c.hap \
-             -l rlegend/h-$c.legend \
-             -g frdata/w-$c.gen \
-             -strand_g rstrand/$c \
-             -int 20e6 24e6 \
-             -Ne 11418 \
-             -o impute2/out/$c \
-           > impute2/cmds/$c.sh
-     done
-   #+end_src
-** R version
+** Create chunk scripts
 #+begin_src R :var chunk=4000000
   Ne <- 11418
+  pop <- "UK" ## "all"
+  odir <- file.path("impute2", pop)
+      
   for(c in chroms) {
-      outdir <- file.path("impute2", "cmds", c)
-      stdoutdir <- file.path("impute2", "stdout", c)
-      stderrdir <- file.path("impute2", "stderr", c)
-      dir.create(outdir, recursive=TRUE)
+      cmdsdir <- file.path(odir, "cmds", c)
+      stdoutdir <- file.path(odir, "stdout", c)
+      stderrdir <- file.path(odir, "stderr", c)
+      outdir <- file.path(odir, "out", c)
+      dir.create(cmdsdir, recursive=TRUE)
       dir.create(stdoutdir, recursive=TRUE)
       dir.create(stderrdir, recursive=TRUE)
+      dir.create(outdir, recursive=TRUE)
       pos <- scan(posfile(c, "w"))
       intervals <- make.intervals(pos, width=chunk, overlap=chunk/10)
       for(i in seq(nrow(intervals))) {
@@ -891,22 +912,58 @@ Functions to compute frequency of allele 0
                     "-h", hapfile(c, "h"),
                     "-l", legendfile(c, "h"),
                     "-g", frdatafile(c, "w"),
+                    "-sample_g", indivsamplefile("w"),
+                    "-exclude_samples_g", indivexcludefile(pop, "w"),
                     "-strand_g", rstrandfile(c),
+                    "-k 80",
                     "-int", intervals[i,"start"], intervals[i,"end"],
+                    "-buffer 1000",
+                    "exclude_snps_g", snpexcludefile(c, "w"),
                     "-Ne", Ne,
-                    "-o", file.path("impute2", "out", c, i))
+                    "-o", file.path(outdir, sprintf("%03d", i)))
           cat(qsub.script(cmd,
-                          name=sprintf("%s-%s-%03d", "i2", c, i),
+                          name=sprintf("%s-%s-%03d", pop, c, i),
                           outfile=file.path(stdoutdir, i),
                           errfile=file.path(stderrdir, i)),
-              file=file.path(outdir, sprintf("%03d.sh", i)))
+              file=file.path(cmdsdir, sprintf("%03d.sh", i)))
       }
   }
 #+end_src
 
-#+results:
+*** Shell version
+    -strand_g frdata/w-$c.gen.strand \
+
+    -fix_strand_g \
+
+    #+begin_src sh
+      mkdir -p impute2/cmds impute2/out
+      
+      for c in `seq -w 1 21` ; do
+          echo \
+              impute2 \
+              -phase \
+              -m rmap/h-$c.map \
+              -h frdata/h-$c.hap \
+              -l rlegend/h-$c.legend \
+              -g frdata/w-$c.gen \
+              -strand_g rstrand/$c \
+              -int 20e6 24e6 \
+              -Ne 11418 \
+              -o impute2/out/$c \
+            > impute2/cmds/$c.sh
+      done
+    #+end_src
 
 ** Stitch haplotypes
+#+begin_src R
+  for(c in "22") {
+      hapfiles <- list.files(file.path("impute2/out", c),
+                             pattern="_haps$", full.names=TRUE)
+      ids <- scan(indivfile("w"), what="")
+      stitch.haplotypes(hapfiles, ids, file.path("impute2", "out", "all.hen"))
+  }
+#+end_src
+
 * TODO Sample lists
 
   POBI+MS files have 8267 individuals
@@ -930,14 +987,13 @@ Functions to compute frequency of allele 0
       r <- rle(hap1 == hap2)
       r$lengths[r$values]
   }
+  
 #+end_src
-
-#+results:
 
 *** Compare Orkney vs Norway and Spain vs Norway
 #+begin_src R :var chrom=22 :var nmax=99999
   indivs.d <- pobi.ms.read.samplefile()
-  ids <- scan(indivfile(chrom, "w"), what="")
+  ids <- scan(indivfile("w"), what="")
   pop1 <- "Norway"
   haps <- read.haplotypes(hapfile(chrom, "w"), ids)
   h1 <- extract.haplotypes(pop1, haps, indivs.d)
