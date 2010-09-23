@@ -878,54 +878,74 @@ Functions to compute frequency of allele 0
   indivs.d <- indivs.d[ids,]
   indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
   indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
-  write.table(cbind(rownames(indivs.d),indivs.d), file=indivsamplefile("w"),
-              col.names=c("ID_1", colnames(indivs.d)), row.names=FALSE, quote=FALSE)
+  wtccc2.write.samplefile(indivs.d, file=indivsamplefile("w"))
   for(pop in levels(indivs.d$reg2)) {
       ids.notpop <- rownames(subset(indivs.d, reg2 != pop))
       cat(ids.notpop, sep="\n", file=indivexcludefile(pop, "w"))
   }
-  cat("", file=indivexcludefile("all", "w"))
+  cat("", file=indivexcludefile("All", "w"))
 #+end_src
 
-** Create chunk scripts
+** Sample sizes
+   #+begin_src R :results value replace
+   table(indivs.d$reg2)
+   #+end_src
+
+   #+results:
+   | Belgium |  544 |
+   | Denmark |  332 |
+   | France  |  479 |
+   | Germany | 1100 |
+   | Ireland |   61 |
+   | Italy   |  745 |
+   | Norway  |  953 |
+   | Poland  |   58 |
+   | Spain   |  205 |
+   | Sweden  | 1212 |
+   | UK      | 2578 |
+
+** Write per-population per-chunk scripts
 #+begin_src R :var chunk=4000000
   Ne <- 11418
-  pop <- "UK" ## "all"
-  odir <- file.path("impute2", pop)
+  
+  for(pop in c(levels(indivs.d$reg2), "All")) {
+      odir <- file.path("impute2", pop)
+      dir.create(file.path(odir, "log"), recursive=TRUE)
       
-  for(c in chroms) {
-      cmdsdir <- file.path(odir, "cmds", c)
-      stdoutdir <- file.path(odir, "stdout", c)
-      stderrdir <- file.path(odir, "stderr", c)
-      outdir <- file.path(odir, "out", c)
-      dir.create(cmdsdir, recursive=TRUE)
-      dir.create(stdoutdir, recursive=TRUE)
-      dir.create(stderrdir, recursive=TRUE)
-      dir.create(outdir, recursive=TRUE)
-      pos <- scan(posfile(c, "w"))
-      intervals <- make.intervals(pos, width=chunk, overlap=chunk/10)
-      for(i in seq(nrow(intervals))) {
-          cmd <-
-              paste("impute2",
-                    "-phase",
-                    "-m", mapfile(c, "h"),
-                    "-h", hapfile(c, "h"),
-                    "-l", legendfile(c, "h"),
-                    "-g", frdatafile(c, "w"),
-                    "-sample_g", indivsamplefile("w"),
-                    "-exclude_samples_g", indivexcludefile(pop, "w"),
-                    "-strand_g", rstrandfile(c),
-                    "-k 80",
-                    "-int", intervals[i,"start"], intervals[i,"end"],
-                    "-buffer 1000",
-                    "exclude_snps_g", snpexcludefile(c, "w"),
-                    "-Ne", Ne,
-                    "-o", file.path(outdir, sprintf("%03d", i)))
-          cat(qsub.script(cmd,
-                          name=sprintf("%s-%s-%03d", pop, c, i),
-                          outfile=file.path(stdoutdir, i),
-                          errfile=file.path(stderrdir, i)),
-              file=file.path(cmdsdir, sprintf("%03d.sh", i)))
+      for(c in chroms) {
+          cmdsdir <- file.path(odir, "cmds", c)
+          stdoutdir <- file.path(odir, "stdout", c)
+          stderrdir <- file.path(odir, "stderr", c)
+          outdir <- file.path(odir, "out", c)
+          dir.create(cmdsdir, recursive=TRUE)
+          dir.create(stdoutdir, recursive=TRUE)
+          dir.create(stderrdir, recursive=TRUE)
+          dir.create(outdir, recursive=TRUE)
+          pos <- scan(posfile(c, "w"))
+          intervals <- make.intervals(pos, width=chunk, overlap=chunk/10)
+          for(i in seq(nrow(intervals))) {
+              cmd <-
+                  paste("impute2",
+                        "-phase",
+                        "-m", mapfile(c, "h"),
+                        "-h", hapfile(c, "h"),
+                        "-l", legendfile(c, "h"),
+                        "-g", frdatafile(c, "w"),
+                        "-sample_g", indivsamplefile("w"),
+                        "-exclude_samples_g", indivexcludefile(pop, "w"),
+                        "-strand_g", rstrandfile(c),
+                        "-k 80",
+                        "-int", intervals[i,"start"], intervals[i,"end"],
+                        "-buffer 1000",
+                        "exclude_snps_g", snpexcludefile(c, "w"),
+                        "-Ne", Ne,
+                        "-o", file.path(outdir, sprintf("%03d", i)))
+              cat(qsub.script(cmd,
+                              name=sprintf("%s-%s-%03d", pop, c, i),
+                              outfile=file.path(stdoutdir, i),
+                              errfile=file.path(stderrdir, i)),
+                  file=file.path(cmdsdir, sprintf("%03d.sh", i)))
+          }
       }
   }
 #+end_src
