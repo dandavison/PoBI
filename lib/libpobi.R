@@ -52,6 +52,39 @@ read.haplotypes <- function(hapfile, ids) {
            dimnames=list(rn, rep(ids, each=2)))
 }
 
+compare.haplotypes <- function(h1, h2, twon=ncol(h1)) {
+
+    sum.adjacent.columns <- function(x, colnames=NULL) {
+        stopifnot((twon <- ncol(x)) %% 2 == 0)
+        n <- twon / 2
+        xo <- x[,seq.int(1, twon-1, 2)]
+        xe <- x[,seq.int(2, twon,   2)]
+        matrix(xo + xe, nrow(x), n, dimnames=list(rownames(x), colnames))
+    }
+    
+    ## L x 2n
+    stopifnot(dim(h1) == dim(h1), twon %% 2 == 0)
+    stopifnot(identical(dimnames(h1), dimnames(h2)))
+    h1 <- h1[,1:twon] ; h2 <- h2[,1:twon]
+
+    ## Check genotypes are the same
+    ids <- colnames(h1)[seq(1, twon-1, by=2)]
+    g1 <- sum.adjacent.columns(h1, colnames=ids)
+    g2 <- sum.adjacent.columns(h2, colnames=ids)
+    if(any(bad <- g1 != g2)) {
+        bad.indiv1 <- which(colSums(bad) > 0)[1]
+        bad.snp1 <- which(bad[,bad.indiv1])[1]
+        cat(sum(bad), "genotypes disagree out of", length(bad), "\n")
+        cat("These are in", sum(colSums(bad) > 0), "out of", ncol(bad), "individuals\n")
+        cat("and involve", sum(rowSums(bad) > 0), "out of", nrow(bad), "SNPs\n")
+        cat("The first bad genotype is individual", bad.indiv1, "SNP", bad.snp1, ":\n")
+        print(cbind(h1[bad.snp1,2*(bad.indiv1-1)+(1:2),drop=FALSE],
+                    h2[bad.snp1,2*(bad.indiv1-1)+(1:2),drop=FALSE]))
+        image(z=(h1 == h2), x=c(0,seq(nrow(h1))), y=c(0,1:twon))
+        invisible()
+    }
+}
+
 read.haplotypes.legend <- function(hapfile, ids) {
     ## Return L x 2n binary matrix
     p <- pipe(paste("cut -d ' ' -f 6- <", hapfile))
