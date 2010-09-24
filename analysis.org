@@ -870,14 +870,18 @@ Functions to compute frequency of allele 0
 
 * TODO What's going on with chromosome 1 ??
 * STARTED Phasing
-** Sample files and per-population exclude files
+** Individuals data
 #+begin_src R
   indivs.d <- pobi.ms.read.samplefile()
-  ids <- scan(indivfile("w"), what="")
+  ids <- scan(individfile("w"), what="")
   stopifnot(ids %in% rownames(indivs.d))
   indivs.d <- indivs.d[ids,]
   indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
   indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
+#+end_src
+
+** Sample files and per-population exclude files
+#+begin_src R
   wtccc2.write.samplefile(indivs.d, file=indivsamplefile("w"))
   for(pop in levels(indivs.d$reg2)) {
       ids.notpop <- rownames(subset(indivs.d, reg2 != pop))
@@ -937,7 +941,7 @@ Functions to compute frequency of allele 0
                         "-k 80",
                         "-int", intervals[i,"start"], intervals[i,"end"],
                         "-buffer 1000",
-                        "exclude_snps_g", snpexcludefile(c, "w"),
+                        "-exclude_snps_g", snpexcludefile(c, "w"),
                         "-Ne", Ne,
                         "-o", file.path(outdir, sprintf("%03d", i)))
               cat(qsub.script(cmd,
@@ -973,6 +977,59 @@ Functions to compute frequency of allele 0
             > impute2/cmds/$c.sh
       done
     #+end_src
+
+** Test phasing
+*** Run twice on same input
+#+begin_src sh
+for i in 1 2 ; do
+  impute2 -phase \
+      -m data/HM3/22.map \
+      -h data/HM3/22.hap \
+      -l data/HM3/22.legend \
+      -g frdata/w-22.gen \
+      -sample_g indivs/indivs.sample \
+      -exclude_samples_g indivexclude/Poland \
+      -strand_g rstrand/22 \
+      -k 80 \
+      -int 29284399 33284399 \
+      -buffer 1000 \
+      -exclude_snps_g snpexclude/22 \
+      -Ne 11418 \
+      -burnin 0 \
+      -iter 1 \
+      -o impute2-test/$i
+done
+#+end_src
+
+*** Check haplotypes
+#+begin_src R :var hfile1="impute2-test/1_haps" :var hfile2="impute2-test/2_haps" :var chrom=22 :var reg="Poland" :var int0=29284399 :var int1=33284399 :results output replace
+  ids.pop <- indivs.d$ID_1[indivs.d$reg2 == reg]
+  h1 <- read.haplotypes(hfile1, ids=ids.pop)
+  h2 <- read.haplotypes(hfile2, ids=ids.pop)
+  leg <- read.chiamo.legend(rdatafile(chrom, "w"))
+  stopifnot(identical(dimnames(h1), dimnames(h2)))
+  
+  ## Check hap SNPs are SNPs in interval
+  in.int <- leg$pos > int0 & leg$pos < int1
+  stopifnot(leg$ID_2[in.int] == rownames(h1))
+  
+  compare.haplotypes(h1, h2)
+#+end_src
+
+#+results:
+#+begin_example
+
+ Read 1018 items
+Read 118088 items
+Read 1018 items
+Read 118088 items
+2 genotypes disagree out of 59044 
+These are in 2 out of 58 individuals
+and involve 2 out of 1018 SNPs
+The first bad genotype is individual 35 SNP 976 :
+         89789_B04 89789_B04 89789_B04 89789_B04
+rs130896         0         1         0         0
+#+end_example
 
 ** Stitch haplotypes
 #+begin_src R
