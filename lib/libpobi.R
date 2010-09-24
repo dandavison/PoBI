@@ -92,6 +92,24 @@ read.haplotypes.legend <- function(hapfile, ids) {
            dimnames=list(NULL, rep(ids, each=2)))
 }
 
+read.chiamo <- function(genfile, ids=1:n, gz=FALSE, thresh=.9) {
+    leg <- read.chiamo.legend(genfile)
+    L <- nrow(leg)
+    p <- scan(pipe(paste("cut -d' ' -f 6- <", genfile)), what=double())
+    stopifnot(length(p) %% (3*L) == 0)
+    n <- length(p) / (3*L)
+    stopifnot(length(ids) == n)
+    dim(p) <- c(3,n,L)
+    w <- p > thresh
+    ## g <- apply(w, c(2,3), function(s) ifelse(any(s), which(s), NA)) - 1
+    g <- array(as.integer(NA), dim=c(n, L))
+    g[w[1,,]] <- 0
+    g[w[2,,]] <- 1
+    g[w[3,,]] <- 2
+    dimnames(g) <- list(ids, leg$ID_2)
+    t(g)
+}
+
 read.chiamo.legend <- function(chiamofile)
     read.table(pipe(paste("cut -d' ' -f1-5 <", chiamofile)),
                col.names=c("ID_1","ID_2","pos", "allele1", "allelel2"),
