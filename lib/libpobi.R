@@ -48,7 +48,7 @@ read.haplotypes <- function(hapfile, ids) {
     ## Return L x 2n binary matrix
     rn <- scan(pipe(paste("cut -d ' ' -f 2 <", hapfile)), what="")
     p <- pipe(paste("cut -d ' ' -f 6- <", hapfile))
-    matrix(scan(p, what=integer()), ncol=2*length(ids),
+    matrix(scan(p, what=integer()), ncol=2*length(ids), byrow=TRUE,
            dimnames=list(rn, rep(ids, each=2)))
 }
 
