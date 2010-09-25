@@ -52,7 +52,7 @@ read.haplotypes <- function(hapfile, ids) {
            dimnames=list(rn, rep(ids, each=2)))
 }
 
-compare.haplotypes <- function(h1, h2, twon=ncol(h1)) {
+compare.haplotypes <- function(h1, h2, imgfile, twon=ncol(h1)) {
 
     sum.adjacent.columns <- function(x, colnames=NULL) {
         stopifnot((twon <- ncol(x)) %% 2 == 0)
@@ -89,7 +89,7 @@ compare.haplotypes <- function(h1, h2, twon=ncol(h1)) {
 
     ## Compare haplotypes
     cat("Comparing haplotypes\n")
-    png(file="haplotype-agreements-2.png", width=1000, height=500)
+    png(file=imgfile, width=1000, height=500)
     homo <- g1 %in% c(0,2) | g2 %in% c(0,2)
     dim(homo) <- dim(g1)
     hap.homo <- array(dim=c(nrow(homo),2,ncol(homo)))
