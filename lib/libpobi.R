@@ -66,9 +66,11 @@ compare.haplotypes <- function(h1, h2, twon=ncol(h1)) {
     stopifnot(dim(h1) == dim(h1), twon %% 2 == 0)
     stopifnot(identical(dimnames(h1), dimnames(h2)))
     h1 <- h1[,1:twon] ; h2 <- h2[,1:twon]
-
+    n <- twon / 2
+    
     ## Check genotypes are the same
-    ids <- colnames(h1)[seq(1, twon-1, by=2)]
+    odds <- seq(1, twon-1, by=2)
+    ids <- colnames(h1)[odds]
     g1 <- sum.adjacent.columns(h1, colnames=ids)
     g2 <- sum.adjacent.columns(h2, colnames=ids)
     if(any(bad <- g1 != g2)) {
@@ -80,9 +82,23 @@ compare.haplotypes <- function(h1, h2, twon=ncol(h1)) {
         cat("The first bad genotype is individual", bad.indiv1, "SNP", bad.snp1, ":\n")
         print(cbind(h1[bad.snp1,2*(bad.indiv1-1)+(1:2),drop=FALSE],
                     h2[bad.snp1,2*(bad.indiv1-1)+(1:2),drop=FALSE]))
-        image(z=(h1 == h2), x=c(0,seq(nrow(h1))), y=c(0,1:twon))
-        invisible()
+        pdf(file="genotype-agreements.pdf")
+        image(z=(g1 == g2), x=c(0,seq(nrow(g1))), y=c(0,1:n))
+        dev.off()
     }
+
+    ## Compare haplotypes
+    cat("Comparing haplotypes\n")
+    png(file="haplotype-agreements-2.png", width=1000, height=500)
+    homo <- g1 %in% c(0,2) | g2 %in% c(0,2)
+    dim(homo) <- dim(g1)
+    hap.homo <- array(dim=c(nrow(homo),2,ncol(homo)))
+    hap.homo[,1,] <- hap.homo[,2,] <- homo
+    dim(hap.homo) <- c(nrow(homo), 2*ncol(homo))
+    h1[hap.homo] <- h2[hap.homo] <- NA
+    
+    image(z=(h1[,odds] == h2[,odds]), x=c(0,seq(nrow(h1))), y=c(0,1:n), col=topo.colors(2))
+    dev.off()
 }
 
 read.haplotypes.legend <- function(hapfile, ids) {
