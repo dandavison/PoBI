@@ -157,7 +157,7 @@ qsub.script <- function(cmd, name, outfile, errfile)
           cmd, "\n",
           sep="")
 
-stitch.haplotypes <- function(files, ids, outfile, thresh=.9) {
+stitch.haplotypes <- function(files, ids, outfile, thresh=.9, nolap=10) {
     write.haplotypes <- function(leg, h, file, append)
         write.table(cbind(leg, h), file=file, append=append,
                     quote=FALSE, row.names=FALSE, col.names=FALSE)
@@ -187,21 +187,24 @@ stitch.haplotypes <- function(files, ids, outfile, thresh=.9) {
             ii <- 2*(i-1)
 
             ## Check that genotypes are identical
-            stopifnot(rowSums(o1[,ii+(1:2)]) == rowSums(o2[,ii+(1:2)]))
+            if(any(bad <- rowSums(o1[,ii+(1:2)]) != rowSums(o2[,ii+(1:2)]))) {
+                msg <- paste(sum(bad), "genotypes disagree")
+                cat(msg, "\n")
+                warning(msg)
+            }
             
-            p11 <- mean(o1[,ii + 1] == o2[,ii + 1])
-            p12 <- mean(o1[,ii + 1] == o2[,ii + 2])
-            p21 <- mean(o1[,ii + 2] == o2[,ii + 1])
-            p22 <- mean(o1[,ii + 2] == o2[,ii + 2])
+            p <- array(dim=c(2,2))
+            p[1,1] <- mean(o1[1:nolap,ii + 1] == o2[1:nolap,ii + 1])
+            p[1,2] <- mean(o1[1:nolap,ii + 1] == o2[1:nolap,ii + 2])
+            p[2,1] <- mean(o1[1:nolap,ii + 2] == o2[1:nolap,ii + 1])
+            p[2,2] <- mean(o1[1:nolap,ii + 2] == o2[1:nolap,ii + 2])
 
-            if(p11 > thresh) {
-                stopifnot(p22 > thresh)
+            print(round(p, 2))
+
+            if(all(diag(p)) > thresh)
                 idx[ii + (1:2)] <- ii + (1:2)
-            }
-            else if(p12 > thresh) {
-                stopifnot(p21 > thresh)
+            else if(all(diag(t(p)) > thresh))
                 idx[ii + (1:2)] <- ii + (2:1)
-            }
             else {
                 msg <- paste("Failed to find match for individual", i)
                 cat(msg, "\n")
