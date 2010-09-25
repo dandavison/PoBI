@@ -132,17 +132,19 @@ read.chiamo.legend <- function(chiamofile)
                as.is=TRUE)
 
 make.intervals <- function(points, width, overlap) {
-    ## Return intervals of width WIDTH overlapping by OVERLAP
+    ## Return intervals of width WIDTH overlapping by OVERLAP points
+    n <- length(points)
     i <- 1
-    starts <- min(points)
-    ends <- starts[i] + width
-    while(ends[i] < max(points)) {
+    starts <- 1
+    ends <- integer()
+    while(TRUE) {
+        ends[i] <- max(which(points < points[starts[i]] + width))
+        if(ends[i] == n) break
         i <- i+1
         starts[i] <- ends[i-1] - overlap
-        ends[i] <- starts[i] + width
+        stopifnot(starts[i] > starts[i-1])
     }
-    ends[i] <- max(points)
-    cbind(start=starts, end=ends)
+    cbind(start=points[starts], end=points[ends])
 }
 
 qsub.script <- function(cmd, name, outfile, errfile)

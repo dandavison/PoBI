@@ -926,7 +926,7 @@ Functions to compute frequency of allele 0
           dir.create(stderrdir, recursive=TRUE)
           dir.create(outdir, recursive=TRUE)
           pos <- scan(posfile(c, "w"))
-          intervals <- make.intervals(pos, width=chunk, overlap=chunk/10)
+          intervals <- make.intervals(pos, width=chunk, overlap=100)
           for(i in seq(nrow(intervals))) {
               cmd <-
                   paste("impute2",
