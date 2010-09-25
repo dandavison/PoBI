@@ -15,7 +15,7 @@
 
 ** R environment
 #+source: set-variables
-#+begin_src R :var ifile=MS-ifile
+#+begin_src R
   source("lib/libpobi.R")
   source("lib/libwtccc2.R")
   
@@ -1039,10 +1039,10 @@ null device
 ** Stitch haplotypes
 #+begin_src R
   for(c in "22") {
-      hapfiles <- list.files(file.path("impute2/out", c),
+      hapfiles <- list.files(file.path("impute2/pop/out", c),
                              pattern="_haps$", full.names=TRUE)
       ids <- scan(indivfile("w"), what="")
-      stitch.haplotypes(hapfiles, ids, file.path("impute2", "out", "all.hen"))
+      stitch.haplotypes(hapfiles, ids, file.path("impute2", "pop", "out", "all.hen"))
   }
 #+end_src
 
