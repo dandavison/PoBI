@@ -97,7 +97,7 @@ compare.haplotypes <- function(h1, h2, twon=ncol(h1)) {
     dim(hap.homo) <- c(nrow(homo), 2*ncol(homo))
     h1[hap.homo] <- h2[hap.homo] <- NA
     
-    image(z=(h1[,odds] == h2[,odds]), x=c(0,seq(nrow(h1))), y=c(0,1:n), col=topo.colors(2))
+    image(z=(h1[,odds] == h2[,odds]), x=c(0,seq(nrow(h1))), y=c(0,1:n), col=c("red","blue"))
     dev.off()
 }
 
