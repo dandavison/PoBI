@@ -141,8 +141,7 @@ make.intervals <- function(points, width, overlap) {
         ends[i] <- max(which(points < points[starts[i]] + width))
         if(ends[i] == n) break
         i <- i+1
-        starts[i] <- ends[i-1] - overlap
-        stopifnot(starts[i] > starts[i-1])
+        starts[i] <- max(ends[i-1] - overlap, starts[i-1] + 1)
     }
     cbind(start=points[starts], end=points[ends])
 }
