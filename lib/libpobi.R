@@ -157,7 +157,7 @@ qsub.script <- function(cmd, name, outfile, errfile)
           cmd, "\n",
           sep="")
 
-stitch.haplotypes <- function(files, ids, outfile, thresh=.9, nolap=10) {
+stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=10) {
     write.haplotypes <- function(leg, h, file, append)
         write.table(cbind(leg, h), file=file, append=append,
                     quote=FALSE, row.names=FALSE, col.names=FALSE)
@@ -170,10 +170,13 @@ stitch.haplotypes <- function(files, ids, outfile, thresh=.9, nolap=10) {
 
         ## Identify overlapping SNPs
         stopifnot(leg2$ID_2[1] %in% leg1$ID_2)
-        olap <- which(leg2$ID_2[1] == leg1$ID_2)
-        o1.idx <- olap:n1
-        o2.idx <- 1:(n1-olap+1)
+        ostart1 <- which(leg2$ID_2[1] == leg1$ID_2)
+        o1.idx <- ostart1:n1
+        stopifnot(length(o1.idx) == nolap)
+        o2.idx <- 1:nolap
+        stopifnot(leg1$ID_2[n1] == leg2$ID_2[nolap])
         stopifnot(leg1$ID_2[o1.idx] == leg2$ID_2[o2.idx])
+        stopifnot(olap.nuse <= nolap)
         
         ## Form column index vector matching haplotypes
         o1 <- haps1[o1.idx,,drop=FALSE]
@@ -194,24 +197,36 @@ stitch.haplotypes <- function(files, ids, outfile, thresh=.9, nolap=10) {
             }
             
             p <- array(dim=c(2,2))
-            p[1,1] <- mean(o1[1:nolap,ii + 1] == o2[1:nolap,ii + 1])
-            p[1,2] <- mean(o1[1:nolap,ii + 1] == o2[1:nolap,ii + 2])
-            p[2,1] <- mean(o1[1:nolap,ii + 2] == o2[1:nolap,ii + 1])
-            p[2,2] <- mean(o1[1:nolap,ii + 2] == o2[1:nolap,ii + 2])
-
+            w <- olap.nuse
+            while(TRUE) {
+                p[1,1] <- mean(o1[1:w,ii + 1] == o2[1:w,ii + 1])
+                p[1,2] <- mean(o1[1:w,ii + 1] == o2[1:w,ii + 2])
+                p[2,1] <- mean(o1[1:w,ii + 2] == o2[1:w,ii + 1])
+                p[2,2] <- mean(o1[1:w,ii + 2] == o2[1:w,ii + 2])
+                if(any(p < 1) || w == nolap) break
+                w <- min(w + olap.nuse, nolap)
+                cat("Extending overlap region to", w, "\n")
+            }
+                
             print(round(p, 2))
+            p11 <- p[1,1] + p[2,2]
+            p12 <- p[1,2] + p[2,1]
+            if(p11 == p12)
+                pair <- sample(1:2)
+            else if(p11 > p12)
+                pair <- 1:2
+            else
+                pair <- 2:1
 
-            if(all(diag(p)) > thresh)
-                idx[ii + (1:2)] <- ii + (1:2)
-            else if(all(diag(t(p)) > thresh))
-                idx[ii + (1:2)] <- ii + (2:1)
-            else {
-                msg <- paste("Failed to find match for individual", i)
+            idx[ii + (1:2)] <- ii + pair
+            
+            if(!(p11 >= 2*thresh || p12 >= 2*thresh)) {
+                msg <- paste("No clear resolution for individual", i)
                 cat(msg, "\n")
                 warning(msg)
             }
         }
-        haps2[-o2.idx,idx,drop=FALSE]
+        list(h=haps2[-o2.idx,idx,drop=FALSE], l=leg2[-o2.idx,,drop=FALSE])
     }
 
     
@@ -221,9 +236,10 @@ stitch.haplotypes <- function(files, ids, outfile, thresh=.9, nolap=10) {
     for(f in files[-1]) {
         h <- read.haplotypes(f, ids)
         l <- read.chiamo.legend(f)
-        h <- match.haplotypes(hprev, lprev, h, l)
-        write.haplotypes(l, h, outfile, append=TRUE)
-        hprev <- h
-        lprev <- l
+        hl <- match.haplotypes(hprev, lprev, h, l)
+        stopifnot(nrow(hl$h)+nolap == nrow(h), nrow(hl$l)+nolap == nrow(l))
+        write.haplotypes(hl$l, hl$h, outfile, append=TRUE)
+        hprev <- hl$h
+        lprev <- hl$l
     }
 }
