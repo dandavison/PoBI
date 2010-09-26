@@ -14,7 +14,7 @@
 | (:session . *R-PoBI*) |
 
 ** R environment
-#+source: set-variables
+*** Variables
 #+begin_src R
   source("lib/libpobi.R")
   source("lib/libwtccc2.R")
@@ -23,8 +23,9 @@
   system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
   
   chroms <- sprintf("%02d", 1:22)
-  nwtccc2 <- 8267
-  
+#+end_src
+*** Data file functions
+#+begin_src R
   datafile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              h = sprintf("data/HM3/%s.hap", chr),
@@ -81,6 +82,16 @@
       switch(match.arg(dataset),
              w = sprintf("indivexclude/%s", pop),
              h = stop("No need for this"))
+#+end_src
+*** Individuals data
+#+begin_src R
+  indivs.d <- pobi.ms.read.samplefile()
+  ids <- scan(individfile("w"), what="")
+  stopifnot(ids %in% rownames(indivs.d))
+  indivs.d <- indivs.d[ids,]
+  indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
+  indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
+  nwtccc2 <- 8267
 #+end_src
 
 * DONE MS exclusions
@@ -870,16 +881,6 @@ Functions to compute frequency of allele 0
 
 * TODO What's going on with chromosome 1 ??
 * STARTED Phasing
-** Individuals data
-#+begin_src R
-  indivs.d <- pobi.ms.read.samplefile()
-  ids <- scan(individfile("w"), what="")
-  stopifnot(ids %in% rownames(indivs.d))
-  indivs.d <- indivs.d[ids,]
-  indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
-  indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
-#+end_src
-
 ** Sample files and per-population exclude files
 #+begin_src R
   wtccc2.write.samplefile(indivs.d, file=indivsamplefile("w"))
@@ -915,7 +916,6 @@ Functions to compute frequency of allele 0
   for(pop in c(levels(indivs.d$reg2), "All")) {
       odir <- file.path("impute2", pop)
       dir.create(file.path(odir, "log"), recursive=TRUE)
-      
       for(c in chroms) {
           cmdsdir <- file.path(odir, "cmds", c)
           stdoutdir <- file.path(odir, "stdout", c)
@@ -1036,14 +1036,48 @@ null device
           1
 #+end_example
 
+*** DONE Poland chr22
+**** Check duplicate runs
+#+begin_src R :var hfile1="impute2-test/out-1/006_haps" :var hfile2="impute2-test/out-2/006_haps" :var chrom=22 :var reg="Poland" :var int0=32779778 :var int1=36779340 :results output replace
+  date()
+  ids.pop <- indivs.d$ID_1[indivs.d$reg2 == reg]
+  h1 <- read.haplotypes(hfile1, ids=ids.pop)
+  h2 <- read.haplotypes(hfile2, ids=ids.pop)
+  leg <- read.chiamo.legend(rdatafile(chrom, "w"))
+  stopifnot(identical(dimnames(h1), dimnames(h2)))
+  
+  ## Check hap SNPs are SNPs in interval
+  in.int <- leg$pos >= int0 & leg$pos <= int1
+  stopifnot(rownames(h1) %in% leg$ID_2[in.int])
+  
+  compare.haplotypes(h1, h2, "Poland-chr22-006.png")
+#+end_src
+
+#+results:
+#+begin_example
+
+[1] "Sat Sep 25 13:45:18 2010"
+ Read 1018 items
+Read 118088 items
+Warning message:
+closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/1_haps)
+Read 1018 items
+Read 118088 items
+Warning messages:
+1: closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/2_haps) 
+2: closing unused connection 4 (cut -d ' ' -f 6- < impute2-test/1_haps)
+Warning message:
+closing unused connection 5 (cut -d ' ' -f 6- < impute2-test/2_haps)
+ Comparing haplotypes
+null device 
+          1
+#+end_example
+
 ** Stitch haplotypes
-#+begin_src R
-  for(c in "22") {
-      hapfiles <- list.files(file.path("impute2/pop/out", c),
-                             pattern="_haps$", full.names=TRUE)
-      ids <- scan(indivfile("w"), what="")
-      stitch.haplotypes(hapfiles, ids, file.path("impute2", "pop", "out", "all.hen"))
-  }
+#+begin_src R :var reg="Poland" :var outdir="impute2-test/out-1" :var nolap=100
+  hapfiles <- list.files(outdir, pattern="_haps$", full.names=TRUE)
+  ids <- indivs.d$ID_1[indivs.d$reg2 == reg]
+  stitch.haplotypes(hapfiles, ids, file.path(outdir, "all.hen"))
 #+end_src
 
 * TODO Sample lists
