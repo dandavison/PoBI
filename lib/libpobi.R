@@ -54,7 +54,7 @@ read.haplotypes <- function(hapfile, ids) {
 
 read.chiamo.legend <- function(chiamofile)
     read.table(pipe(paste("cut -d' ' -f1-5 <", chiamofile)),
-               col.names=c("ID_1","ID_2","pos", "allele1", "allelel2"),
+               col.names=c("ID_1","ID_2","pos", "allele1", "allele2"),
                as.is=TRUE)
 
 read.chiamo <- function(genfile, ids=1:n, gz=FALSE, thresh=.9) {
