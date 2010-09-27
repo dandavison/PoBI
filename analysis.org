@@ -92,6 +92,14 @@
       file.path("garrett", "recomb", paste(chrom, ".rec", sep=""))
   g.legfile <- function(chrom)
       file.path("garrett", "snps", paste(chrom, ".leg", sep=""))
+  g.recipientfile <- function()
+      file.path("garrett", "pops", "recipients")
+  g.donorfile <- function()
+      file.path("garrett", "pops", "donors")
+  g.donorlistfile <- function(recipient)
+      file.path("garrett", "donorlists", paste(recipient, ".donorlist", sep=""))
+  g.codesfile <- function()
+      file.path("garrett", "pops", "codes")
 #+end_src
 *** Individuals data
 #+begin_src R
@@ -1243,11 +1251,13 @@ null device
 
 * TODO Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
+  ndonors <- 50
   chroms <- "22"
   pops <- done.pops ## levels(indivs.d$reg2)
   codes <- structure(codes.d[[2]], names=codes.d[[1]])
   stopifnot(pops[pops != "UK"] %in% names(codes))
   stopifnot(levels(indivs.d$reg) %in% names(codes))
+  UKregions <- unique(as.character(indivs.d$reg[indivs.d$reg2 == "UK"]))
   
   write.garrett.recomb.file <- function(chrom, leg) {
       op <- options() ; on.exit(options(op))
@@ -1259,22 +1269,23 @@ null device
                   file=g.recombfile(chrom), quote=FALSE, row.names=FALSE, col.names=TRUE)
   }
   
+  indiv2hap.idx <- function(idx) c(rbind(2*idx - 1, 2*idx))
+  
   write.garrett.haplotype.and.id.files <- function(haps, ids, pos, chrom, pop, perm) {
       stopifnot(ncol(haps) == 2*length(ids))
       stopifnot(nrow(haps) == length(pos))
-      hap.perm <- c(rbind(2*perm - 1, 2*perm))
+      hap.perm <- indiv2hap.idx(perm)
       haps <- haps[,hap.perm]
       ids <- ids[perm]
-  
       ## num.inds
       ## num.snps
       ## P positions.vector
       ## SSSSSSSS (repeated num.snps times, though really you can have anything here)
       hapfile <- g.hapfile(pop, chrom)
       cat(length(ids), "\n", file=hapfile)
-      cat(nrow(haps), "\n", file=hapfile)
-      cat(pos, sep=" ", file=hapfile) ; cat("\n", file=hapfile)
-      cat(rep("S", nrow(haps)), "\n", sep="")
+      cat(nrow(haps), "\n", file=hapfile, append=TRUE)
+      cat("P", pos, sep=" ", file=hapfile, append=TRUE) ; cat("\n", file=hapfile, append=TRUE)
+      cat(rep("S", nrow(haps)), "\n", sep="", file=hapfile, append=TRUE)
       cat(rbind(haps, rep("\n", ncol(haps))), sep="", file=hapfile, append=TRUE)
       if(!file.exists(g.idfile(pop)))
           cat(levels(ids)[ids], sep="\n", file=g.idfile(pop))
@@ -1283,7 +1294,7 @@ null device
   }
   
   set.seed(14011978)
-  perms <- sapply(levels(indivs$reg), function(reg) sample(1:sum(indivs.d$reg == reg)),
+  perms <- sapply(levels(indivs.d$reg), function(reg) sample(1:sum(indivs.d$reg == reg)),
                   simplify=FALSE)
   names(perms) <- codes[names(perms)]
   
@@ -1291,7 +1302,7 @@ null device
       leg0 <- read.chiamo.legend(henfile(c, "Norway"))
       if(!file.exists(g.legfile(c)))
           write.table(leg0, file=g.legfile(c),
-                  col.names=FALSE, row.names=FALSE, quote=FALSE)
+                      col.names=FALSE, row.names=FALSE, quote=FALSE)
       if(!file.exists(g.recombfile(c)))
           write.garrett.recomb.file(c, leg0)
       for(pop in pops) {
@@ -1301,17 +1312,41 @@ null device
           stopifnot(identical(leg, leg0)) ## ??
           haps <- read.haplotypes(hen, ids)
           if(pop != "UK")
-              write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos, chrom=c, pop=codes[pop], perm=perms[pop])
-          else for(UKreg in levels(indivs.d$reg)) {
-              inreg <- indivs.d$reg == UKreg
-              haps.reg <- haps[,inreg,drop=FALSE]
-              ids.reg <- ids[inreg]
-              hapfile <- 
-              write.garrett.haplotype.and.id.file(haps.reg, ids.reg, pos=leg$pos, chrom=c, pop=codes[UKreg], perm=perms[pop])
-              cat(levels(ids)[ids.reg], sep="\n", file=g.idfile(codes[UKreg]))
+              write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos,
+                                                   chrom=c, pop=codes[pop], perm=perms[[codes[pop]]])
+          else {
+              for(UKreg in UKregions) { 
+                  inUK <- indivs.d$reg2 == "UK"
+                  inreg <- indivs.d[inUK,"reg"] == UKreg
+                  haps.reg <- haps[,rep(inreg, each=2),drop=FALSE]
+                  ids.reg <- ids[inreg]
+                  hapfile <-
+                      write.garrett.haplotype.and.id.files(haps.reg, ids.reg, pos=leg$pos,
+                                                           chrom=c, pop=codes[UKreg], perm=perms[[codes[UKreg]]])
+              }
           }
       }
   }
+  
+  allpops <- levels(indivs.d$reg2)
+  write.table(cbind(codes, gsub(" ", "_", names(codes))),
+                    file=g.codesfile(), quote=FALSE, row.names=FALSE, col.names=FALSE)
+  recipients <- codes[c(UKregions, "Ireland")]
+  donors <- codes[allpops[! allpops %in% c("UK","Ireland")]]
+  cat(recipients, file=g.recipientfile(), sep="\n")
+  cat(donors, file=g.donorfile(), sep="\n")
+  
+  write.donorlist <- function(recipient, donors, n, ndonors) {
+      stopifnot(names(n) == c(donors, recipient))
+      n[donors] <- ndonors
+      write.table(n, file=g.donorlistfile(recipient),
+                  quote=FALSE, row.names=TRUE, col.names=FALSE)
+  }
+  
+  tab <- table(codes[as.character(indivs.d$reg)])
+  for(recip in recipients)
+      write.donorlist(recip, donors, tab[c(donors,recip)], ndonors)
+  
   
 #+end_src
 
