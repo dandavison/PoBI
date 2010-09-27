@@ -68,8 +68,10 @@
       sprintf("flipinput/%s-%s.flip", dataset, chr)
   hapfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
-             w = sprintf("impute2/out/%s_haps", chr),
+             w = stop("Not implemented"),
              h = sprintf("data/HM3/%s.hap", chr))
+  henfile <- function(chr, pop)
+      file.path("impute2", pop, "out", chr, "all.hen")
   posfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              w = sprintf("pos/%s", chr),
@@ -82,6 +84,14 @@
       switch(match.arg(dataset),
              w = sprintf("indivexclude/%s", pop),
              h = stop("No need for this"))
+  g.hapfile <- function(pop, chrom)
+      file.path("garrett", "haplotypes", pop, paste(chrom, ".haps", sep=""))
+  g.idfile <- function(pop)
+      file.path("garrett", "indivs", paste(pop, ".ids", sep=""))
+  g.recombfile <- function(chrom)
+      file.path("garrett", "recomb", paste(chrom, ".rec", sep=""))
+  g.legfile <- function(chrom)
+      file.path("garrett", "snps", paste(chrom, ".leg", sep=""))
 #+end_src
 *** Individuals data
 #+begin_src R
@@ -91,8 +101,28 @@
   indivs.d <- indivs.d[ids,]
   indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
   indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
-  nwtccc2 <- 8267
+  nwtccc2 <- nrow(indivs.d)
+  stopifnot(nwtccc2 == 8267)
 #+end_src
+
+** Sample sizes
+   #+source: sample-sizes
+   #+begin_src R :results value replace
+   table(indivs.d$reg2)
+   #+end_src
+
+   #+results: sample-sizes
+   | Belgium |  544 |
+   | Denmark |  332 |
+   | France  |  479 |
+   | Germany | 1100 |
+   | Ireland |   61 |
+   | Italy   |  745 |
+   | Norway  |  953 |
+   | Poland  |   58 |
+   | Spain   |  205 |
+   | Sweden  | 1212 |
+   | UK      | 2578 |
 
 * DONE MS exclusions
 #+begin_src R
@@ -891,24 +921,6 @@ Functions to compute frequency of allele 0
   cat("", file=indivexcludefile("All", "w"))
 #+end_src
 
-** Sample sizes
-   #+begin_src R :results value replace
-   table(indivs.d$reg2)
-   #+end_src
-
-   #+results:
-   | Belgium |  544 |
-   | Denmark |  332 |
-   | France  |  479 |
-   | Germany | 1100 |
-   | Ireland |   61 |
-   | Italy   |  745 |
-   | Norway  |  953 |
-   | Poland  |   58 |
-   | Spain   |  205 |
-   | Sweden  | 1212 |
-   | UK      | 2578 |
-
 ** Write per-population per-chunk scripts
 #+begin_src R :var chunk=4000000
   Ne <- 11418
@@ -1072,32 +1084,9 @@ closing unused connection 5 (cut -d ' ' -f 6- < impute2-test/2_haps)
 null device 
           1
 #+end_example
-
-** Stitch haplotypes
-#+begin_src R :var reg="Poland" :var outdir="impute2-test/out-1" :var nolap=100
-  hapfiles <- list.files(outdir, pattern="_haps$", full.names=TRUE)
-  ids <- indivs.d$ID_1[indivs.d$reg2 == reg]
-  stitch.haplotypes(hapfiles, ids, file.path(outdir, "all.hen"))
-#+end_src
-
-* TODO Sample lists
-
-  POBI+MS files have 8267 individuals
-
-  #+begin_src R :results output
-  system(paste("~/bin/numindivs-gen", datafile("22", "w")))
-  
-  system("wc -l 22-MSx.ids")
-  #+end_src
-
-  #+results:
-  : head: cannot open `data/POBI+MS/22-allx.gen' for reading: No such file or directory
-  : -1
-  : wc: 22-MS.ids: No such file or directory
-
-* TODO Validate phasing
-** Allele frequencies should be the same!
-** Distribution of identical stretch lengths
+*** Validate phasing
+**** Allele frequencies should be the same!
+**** Distribution of identical stretch lengths
 #+begin_src R
   identical.stretch.lengths <- function(hap1, hap2) {
       r <- rle(hap1 == hap2)
@@ -1106,7 +1095,7 @@ null device
   
 #+end_src
 
-*** Compare Orkney vs Norway and Spain vs Norway
+***** Compare Orkney vs Norway and Spain vs Norway
 #+begin_src R :var chrom=22 :var nmax=99999
   indivs.d <- pobi.ms.read.samplefile()
   ids <- scan(indivfile("w"), what="")
@@ -1133,7 +1122,75 @@ null device
 
 #+results:
 
+** Stitch haplotypes
+#+begin_src R :var pops=sample-sizes :results output replace
+print(str(pops))
+#+end_src
+
+#+results:
+: 
+: 'data.frame':	11 obs. of  2 variables:
+:  $ V1: chr  "Belgium" "Denmark" "France" "Germany" ...
+:  $ V2: int  544 332 479 1100 61 745 953 58 205 1212 ...
+: NULL
+
+#+begin_src R :var pops=sample-sizes :var nolap=101
+  for(pop in c("Poland")) { ## pops[[1]]
+      ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
+      for(c in "22") {
+          outdir <- file.path("impute2", pop, "out", c)
+          hapfiles <- list.files(outdir, pattern="^[0-9]+_haps$", full.names=TRUE)
+          stitch.haplotypes(hapfiles, ids, file.path(outdir, "all.hen"), nolap=nolap)
+      }
+  }
+#+end_src
+
 * TODO Create Garrett input files
+#+begin_src R :var chroms='(22) :var pops='(UK) :results output replace
+  write.garrett.recomb.file <- function(chrom, leg) {
+      op <- options() ; on.exit(options(op))
+      options(scipen=100, digits=15)
+      hmap <- read.table(mapfile(chrom, "h"), header=TRUE, as.is=TRUE)
+      r <- approx(hmap[c("position","COMBINED_rate.cM.Mb.")], xout=leg$pos)$y
+      stopifnot(diff(leg$pos) > 0)
+      write.table(cbind(start.pos=leg$pos, recom.rate.perbp=r*1e-8), 
+                  file=g.recombfile(chrom), quote=FALSE, row.names=FALSE, col.names=TRUE)
+  }
+  
+  write.garrett.haplotype.file <- function(haps, pop, chrom)
+      cat(rbind(haps, rep("\n", ncol(haps))),
+          sep="", file=g.hapfile(pop, chrom))
+  
+  chroms <- "22"
+  pops <- c("Poland")
+  for(c in chroms) {
+      leg0 <- read.chiamo.legend(henfile(c, "Norway"))
+      if(!file.exists(g.legfile(c)))
+          write.table(leg0, file=g.legfile(c),
+                  col.names=FALSE, row.names=FALSE, quote=FALSE)
+      if(!file.exists(g.recombfile(c)))
+          write.garrett.recomb.file(c, leg0)
+      for(pop in pops) {
+          ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
+          hen <- henfile(c, pop)
+          leg <- read.chiamo.legend(hen)
+          stopifnot(identical(leg, leg0)) ## ??
+          haps <- read.haplotypes(hen, ids)
+          write.garrett.haplotype.file(haps, pop, c)
+          cat(levels(ids)[ids], sep="\n", file=g.idfile(pop))
+      }
+  }
+  
+#+end_src
+
+#+results:
+: 
+:  Read 7624 items
+: Read 884384 items
+: Warning messages:
+: 1: closing unused connection 3 (cut -d ' ' -f 2 < impute2/Poland/out/22/all.hen) 
+: 2: closing unused connection 4 (cut -d ' ' -f 6- < impute2/Poland/out/22/all.hen)
+
 ** email
 #+begin_example 
 From: Garrett Hellenthal <ghellenthal@gmail.com>
