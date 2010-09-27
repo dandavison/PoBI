@@ -85,7 +85,7 @@
              w = sprintf("indivexclude/%s", pop),
              h = stop("No need for this"))
   g.hapfile <- function(pop, chrom)
-      file.path("garrett", "haplotypes", pop, paste(chrom, ".haps", sep=""))
+      file.path("garrett", "haplotypes", sprintf("%s.%s.haps", pop, chrom))
   g.idfile <- function(pop)
       file.path("garrett", "indivs", paste(pop, ".ids", sep=""))
   g.recombfile <- function(chrom)
@@ -100,6 +100,9 @@
   stopifnot(ids %in% rownames(indivs.d))
   indivs.d <- indivs.d[ids,]
   indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
+  indivs.d$reg <- as.character(indivs.d$reg)
+  indivs.d$reg[indivs.d$reg == "NA"] <- "Unknown"
+  indivs.d$reg <- factor(indivs.d$reg)
   indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
   nwtccc2 <- nrow(indivs.d)
   stopifnot(nwtccc2 == 8267)
@@ -123,6 +126,106 @@
    | Spain   |  205 |
    | Sweden  | 1212 |
    | UK      | 2578 |
+
+   #+source: sample-sizes-1
+   #+begin_src R :results value replace
+   table(indivs.d$reg)
+   #+end_src
+
+   #+results: sample-sizes-1
+   | Argyll and Bute     |   45 |
+   | Banff and Buchan    |   67 |
+   | Belgium             |  544 |
+   | Cheshire            |   49 |
+   | Cornwall            |   73 |
+   | Cumbria             |  261 |
+   | Denmark             |  332 |
+   | Derbyshire          |   10 |
+   | Devon               |   78 |
+   | Dorset              |   39 |
+   | Forest of Dean      |   57 |
+   | France              |  479 |
+   | Germany             | 1100 |
+   | Gloucestershire     |   46 |
+   | Hampshire           |   47 |
+   | Herefordshire       |   29 |
+   | Ireland             |   61 |
+   | Italy               |  745 |
+   | Kent                |   60 |
+   | Lancashire          |   39 |
+   | Leicestershire      |   85 |
+   | Lincolnshire        |  152 |
+   | Norfolk             |  109 |
+   | North East          |  219 |
+   | North Pembrokeshire |   54 |
+   | North Wales         |   77 |
+   | Northamptonshire    |   57 |
+   | Northern Ireland    |   44 |
+   | Norway              |  953 |
+   | Nottinghamshire     |   79 |
+   | Orkney              |  136 |
+   | Oxfordshire         |  127 |
+   | Poland              |   58 |
+   | South Pembrokeshire |   15 |
+   | Spain               |  205 |
+   | Suffolk             |   96 |
+   | Sussex              |   86 |
+   | Sweden              | 1212 |
+   | Unknown             |  105 |
+   | Worcestershire      |   35 |
+   | Yorkshire           |  202 |
+
+** Region codes
+   #+results: region-codes
+   | Argyll and Bute     | ANB |
+   | Banff and Buchan    | BNB |
+   | Cheshire            | CHE |
+   | Cornwall            | COR |
+   | Cumbria             | CUM |
+   | Derbyshire          | DER |
+   | Devon               | DEV |
+   | Dorset              | DOR |
+   | Forest of Dean      | FOD |
+   | Gloucestershire     | GLO |
+   | Hampshire           | HAM |
+   | Herefordshire       | HER |
+   | Kent                | KEN |
+   | Lancashire          | LAN |
+   | Leicestershire      | LEI |
+   | Lincolnshire        | LIN |
+   | Unknown             | UNK |
+   | Norfolk             | NFK |
+   | North East          | NEA |
+   | North Pembrokeshire | NPE |
+   | North Wales         | NWA |
+   | Northamptonshire    | NHA |
+   | Northern Ireland    | NIR |
+   | Nottinghamshire     | NOT |
+   | Orkney              | ORK |
+   | Oxfordshire         | OXF |
+   | South Pembrokeshire | SPE |
+   | Suffolk             | SUF |
+   | Sussex              | SUS |
+   | Worcestershire      | WOR |
+   | Yorkshire           | YOR |
+   | Belgium             | BEL |
+   | Denmark             | DEN |
+   | France              | FRA |
+   | Germany             | GER |
+   | Ireland             | IRE |
+   | Italy               | ITA |
+   | Norway              | NOR |
+   | Poland              | POL |
+   | Spain               | SPA |
+   | Sweden              | SWE |
+
+   #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace
+     c(nreg=length(codes), nunique=length(unique(codes)))
+   #+end_src
+
+   #+results:
+   | nreg    | 40 |
+   | nunique | 40 |
 
 * DONE MS exclusions
 #+begin_src R
@@ -1123,19 +1226,12 @@ null device
 #+results:
 
 ** Stitch haplotypes
-#+begin_src R :var pops=sample-sizes :results output replace
-print(str(pops))
+#+begin_src R
+  done.pops <- c("Denmark","France","Ireland","Norway","Poland","Spain","UK")
 #+end_src
 
-#+results:
-: 
-: 'data.frame':	11 obs. of  2 variables:
-:  $ V1: chr  "Belgium" "Denmark" "France" "Germany" ...
-:  $ V2: int  544 332 479 1100 61 745 953 58 205 1212 ...
-: NULL
-
 #+begin_src R :var pops=sample-sizes :var nolap=101
-  for(pop in c("Poland")) { ## pops[[1]]
+  for(pop in done.pops) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
       for(c in "22") {
           outdir <- file.path("impute2", pop, "out", c)
@@ -1146,7 +1242,13 @@ print(str(pops))
 #+end_src
 
 * TODO Create Garrett input files
-#+begin_src R :var chroms='(22) :var pops='(UK) :results output replace
+#+begin_src R :var codes.d=region-codes :results output replace
+  chroms <- "22"
+  pops <- done.pops ## levels(indivs.d$reg2)
+  codes <- structure(codes.d[[2]], names=codes.d[[1]])
+  stopifnot(pops[pops != "UK"] %in% names(codes))
+  stopifnot(levels(indivs.d$reg) %in% names(codes))
+  
   write.garrett.recomb.file <- function(chrom, leg) {
       op <- options() ; on.exit(options(op))
       options(scipen=100, digits=15)
@@ -1157,12 +1259,34 @@ print(str(pops))
                   file=g.recombfile(chrom), quote=FALSE, row.names=FALSE, col.names=TRUE)
   }
   
-  write.garrett.haplotype.file <- function(haps, pop, chrom)
-      cat(rbind(haps, rep("\n", ncol(haps))),
-          sep="", file=g.hapfile(pop, chrom))
+  write.garrett.haplotype.and.id.files <- function(haps, ids, pos, chrom, pop, perm) {
+      stopifnot(ncol(haps) == 2*length(ids))
+      stopifnot(nrow(haps) == length(pos))
+      hap.perm <- c(rbind(2*perm - 1, 2*perm))
+      haps <- haps[,hap.perm]
+      ids <- ids[perm]
   
-  chroms <- "22"
-  pops <- c("Poland")
+      ## num.inds
+      ## num.snps
+      ## P positions.vector
+      ## SSSSSSSS (repeated num.snps times, though really you can have anything here)
+      hapfile <- g.hapfile(pop, chrom)
+      cat(length(ids), "\n", file=hapfile)
+      cat(nrow(haps), "\n", file=hapfile)
+      cat(pos, sep=" ", file=hapfile) ; cat("\n", file=hapfile)
+      cat(rep("S", nrow(haps)), "\n", sep="")
+      cat(rbind(haps, rep("\n", ncol(haps))), sep="", file=hapfile, append=TRUE)
+      if(!file.exists(g.idfile(pop)))
+          cat(levels(ids)[ids], sep="\n", file=g.idfile(pop))
+      else
+          cat("File exists -- should check same contents\n")
+  }
+  
+  set.seed(14011978)
+  perms <- sapply(levels(indivs$reg), function(reg) sample(1:sum(indivs.d$reg == reg)),
+                  simplify=FALSE)
+  names(perms) <- codes[names(perms)]
+  
   for(c in chroms) {
       leg0 <- read.chiamo.legend(henfile(c, "Norway"))
       if(!file.exists(g.legfile(c)))
@@ -1176,8 +1300,16 @@ print(str(pops))
           leg <- read.chiamo.legend(hen)
           stopifnot(identical(leg, leg0)) ## ??
           haps <- read.haplotypes(hen, ids)
-          write.garrett.haplotype.file(haps, pop, c)
-          cat(levels(ids)[ids], sep="\n", file=g.idfile(pop))
+          if(pop != "UK")
+              write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos, chrom=c, pop=codes[pop], perm=perms[pop])
+          else for(UKreg in levels(indivs.d$reg)) {
+              inreg <- indivs.d$reg == UKreg
+              haps.reg <- haps[,inreg,drop=FALSE]
+              ids.reg <- ids[inreg]
+              hapfile <- 
+              write.garrett.haplotype.and.id.file(haps.reg, ids.reg, pos=leg$pos, chrom=c, pop=codes[UKreg], perm=perms[pop])
+              cat(levels(ids)[ids.reg], sep="\n", file=g.idfile(codes[UKreg]))
+          }
       }
   }
   
