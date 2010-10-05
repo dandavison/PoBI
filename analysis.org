@@ -20,7 +20,7 @@
   source("lib/libwtccc2.R")
   
   PATH <- "/home/davison/src/shellfish/bin"
-  system("mkdir -p img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
+  system("mkdir -p stitched img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
   
   chroms <- sprintf("%02d", 1:22)
 #+end_src
@@ -70,8 +70,8 @@
       switch(match.arg(dataset),
              w = stop("Not implemented"),
              h = sprintf("data/HM3/%s.hap", chr))
-  henfile <- function(chr, pop)
-      file.path("impute2", pop, "out", chr, "all.hen")
+  stitchedfile <- function(chr, pop)
+      file.path("stitched", sprintf("%s-%s.hen", chr, pop))
   posfile <- function(chr, dataset=c("h","w"))
       switch(match.arg(dataset),
              w = sprintf("pos/%s", chr),
@@ -134,6 +134,14 @@
    | Spain   |  205 |
    | Sweden  | 1212 |
    | UK      | 2578 |
+
+   #+begin_src R :var x=sample-sizes[,1] :session none :results replace :dir /tmp
+     sum(x[1,])
+   #+end_src
+
+   #+results:
+   : [1] 8267
+
 
    #+source: sample-sizes-1
    #+begin_src R :results value replace
@@ -232,8 +240,6 @@
    #+end_src
 
    #+results:
-   | nreg    | 40 |
-   | nunique | 40 |
 
 * DONE MS exclusions
 #+begin_src R
@@ -1234,26 +1240,25 @@ null device
 #+results:
 
 ** Stitch haplotypes
-#+begin_src R
-  done.pops <- c("Denmark","France","Ireland","Norway","Poland","Spain","UK")
-#+end_src
-
-#+begin_src R :var pops=sample-sizes :var nolap=101
-  for(pop in done.pops) {
+#+begin_src R :var pops=sample-sizes[,0] :var nolap=101
+  chrom.nchunks <- c("22"=10)
+  pops <- as.character(pops)
+  for(pop in pops) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
       for(c in "22") {
           outdir <- file.path("impute2", pop, "out", c)
           hapfiles <- list.files(outdir, pattern="^[0-9]+_haps$", full.names=TRUE)
-          stitch.haplotypes(hapfiles, ids, file.path(outdir, "all.hen"), nolap=nolap)
+          stopifnot(length(hapfiles) == chrom.nchunks[c])
+          stitch.haplotypes(hapfiles, ids, stitchedfile(c, pop), nolap=nolap)
       }
   }
 #+end_src
 
-* TODO Create Garrett input files
+* STARTED Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
   ndonors <- 50
   chroms <- "22"
-  pops <- done.pops ## levels(indivs.d$reg2)
+  pops <- levels(indivs.d$reg2)
   codes <- structure(codes.d[[2]], names=codes.d[[1]])
   stopifnot(pops[pops != "UK"] %in% names(codes))
   stopifnot(levels(indivs.d$reg) %in% names(codes))
@@ -1299,7 +1304,7 @@ null device
   names(perms) <- codes[names(perms)]
   
   for(c in chroms) {
-      leg0 <- read.chiamo.legend(henfile(c, "Norway"))
+      leg0 <- read.chiamo.legend(stitchedfile(c, "Norway"))
       if(!file.exists(g.legfile(c)))
           write.table(leg0, file=g.legfile(c),
                       col.names=FALSE, row.names=FALSE, quote=FALSE)
@@ -1307,7 +1312,7 @@ null device
           write.garrett.recomb.file(c, leg0)
       for(pop in pops) {
           ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
-          hen <- henfile(c, pop)
+          hen <- stitchedfile(c, pop)
           leg <- read.chiamo.legend(hen)
           stopifnot(identical(leg, leg0)) ## ??
           haps <- read.haplotypes(hen, ids)
@@ -1328,11 +1333,10 @@ null device
       }
   }
   
-  allpops <- levels(indivs.d$reg2)
   write.table(cbind(codes, gsub(" ", "_", names(codes))),
                     file=g.codesfile(), quote=FALSE, row.names=FALSE, col.names=FALSE)
   recipients <- codes[c(UKregions, "Ireland")]
-  donors <- codes[allpops[! allpops %in% c("UK","Ireland")]]
+  donors <- codes[pops[! pops %in% c("UK","Ireland")]]
   cat(recipients, file=g.recipientfile(), sep="\n")
   cat(donors, file=g.donorfile(), sep="\n")
   
