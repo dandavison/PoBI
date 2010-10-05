@@ -1487,6 +1487,127 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 
 [4. application/octet-stream; BasqueCondOnEurope.recomrates]...
 #+end_example
+* STARTED Copying Analysis
+  :PROPERTIES:
+  :dir: ~/Work/Papers/PoBI/bench
+  :END:
+** Explanatory email
+From: Garrett Hellenthal <ghellenthal@gmail.com>
+Subject: Re: UK-Europe haplotypes
+Date: Thu, 30 Sep 2010 13:34:17 +0100
+To: Dan Davison <davison@stats.ox.ac.uk>
+
+Hi Dan -
+
+Maybe you can take a preliminary look at the results for chrom 22, as
+they're finished? All of these results are based on doing 10 E-M runs to
+estimate N_e. (Typically we then average this across chromos and re-run with
+fixed N_e to get final proportions and samples.)
+
+For the donors, I've estimated proportions for which they copy from each
+other (and themselves) using a "leave-one-out" approach, where, e.g., a SWE
+ind copies with equal a-priori prob from any of the 49 inds from each of the
+other donor pops plus the other 49 inds of their own pop. (We leave-one-out
+so that every donor ind copies from the exact same number of inds from every
+donor pop including itself.)
+
+For the recipients, I've estimated proportions from which they copy from the
+donors (using 50 inds/donor-pop), as well as generated 10 samples from the
+PAC model for each haplotype. Note these are all "raw" proportions, based
+directly on the PAC model output.
+
+The files for the donors are at
+"/data/oak/user/hellenth/POBIdan/ChromoPainterOUTPUT/LeaveOneOutNeResults/"
+The files for the recipients are at
+"/data/oak/user/hellenth/POBIdan/ChromoPainterOUTPUT/PaintingSamples/"
+
+Most of the output is described in the brief write-up I gave you; I think
+you'll be mostly interested in the ".chunkcounts.out" files and the
+".samples.out" files for now. If you divide each row of ".chunkcounts.out"
+by its sum, this gives you the estimated proportion of copying from each
+donor. The ".samples.out" files give, for each recipient haplotype, 10
+samples from the PAC model. Each row under a haplotype header is a sample
+for that recipient hap (as ordered in the files you gave me). The first
+column gives the sample number (1...10) and each subsequent column gives the
+sampled donor haplotype at each snp. Donor haplotypes are labeled as ordered
+in the phase-style input files. For all files, labels "1"-"100" are BEL,
+"101"-"200" are DEN, "201"-"300" are FRA, etc...
+
+Another thing you may need is in
+"/data/oak/user/hellenth/POBIdan/ChromoPainterOUTPUT/" -- the ".recomrates"
+files give the positions corresponding to the locations in the "samples.out"
+files (this is different than the whole chromo 22 recom-rates file you gave
+me, as I first remove monomorphic snps, which may differ per each pop
+analyzed).
+
+Let me know if you have permission troubles as well, etc.
+Garrett
+
+
+** Questions
+*** No difference between pops in *prop.out files
+*** Why self lower than others in *prop.out files?
+** Plot donor proportions
+#+begin_src R :var pops=region-codes[,1] :var dir="POBIdan/ChromoPainterOUTPUT" :var chrom=22
+  files <- list.files(path=file.path(dir, "LeaveOneOutNeResults"),
+                      pattern=sprintf("...Chrom%sLeaveOneOutNeEst.chunkcounts.out", chrom),
+                      full.names=TRUE)
+  filepops <- substr(basename(files), 1, 3)
+  stopifnot(filepops %in% pops)
+  names(files) <- filepops
+  ## files <- sapply(files, gzfile, "r", simplify=FALSE)
+  x <- sapply(files, read.table, row.names=1, header=TRUE, simplify=FALSE)
+  x <- lapply(x, as.matrix)
+  px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
+  
+  npops <- length(filepops)
+  for(pop in names(px)) {
+      stopifnot(colnames(px[[pop]])[npops] == "Self")
+      colnames(px[[pop]])[npops] <- pop
+      px[[pop]] <- px[[pop]][,order(colnames(px[[pop]]))]
+  }
+  
+  z <- sapply(px, colnames)
+  stopifnot(z == z[,1], rownames(z) == filepops, colnames(z) == filepops)
+  
+  
+  mpx <- sapply(px, colMeans)
+  image(mpx, xaxt="n", yaxt="n")
+  for(ax in 1:2)
+      axis(ax, labels=filepops, at=seq(0, 1, length=npops))
+  
+#+end_src
+*** PCA plot
+    PCA of pairwise mean copying proportions between donor countries.
+#+begin_src R :file pca.png :results replace file
+pc <- prcomp(mpx[-7,-7]) ## Get rid of Poland
+pos <- pc$rotation[,2:1]
+pos[,"PC1"] <- -pos[,"PC1"]
+plot(pos, typ="n")
+text(pos, labels=rownames(pos))
+#+end_src
+
+#+results:
+[[file:/home/dan/Work/Papers/PoBI/bench/pca.png]]
+
+
+
+** Chunk Lengths
+
+#+begin_src R :var pops=region-codes[,1]
+  dir="POBIdan/ChromoPainterOUTPUT/PaintingSamples"
+  files <- list.files(path=dir, pattern="...Chrom22PaintingNeEstSamples\\.chunklengths\\.out",
+                      full.names=TRUE)
+  filepops <- substr(basename(files), 1, 3)
+  stopifnot(filepops %in% pops)
+  names(files) <- filepops
+  ## files <- sapply(files, gzfile, "r", simplify=FALSE)
+  x <- sapply(files, read.table, row.names=1, header=TRUE, simplify=FALSE)
+  x <- lapply(x, as.matrix)
+  mx <- sapply(x, colMeans)
+  
+#+end_src
+
 * PCA
 #+begin_src sh
   cd data/POBI+MS
