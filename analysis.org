@@ -1043,6 +1043,7 @@ Functions to compute frequency of allele 0
   Ne <- 11418
   chunk <- 5e6
   snpdensity <- .0002 * .75
+  cluster.level <- 3
   
   for(pop in c(levels(indivs.d$reg2), "All")) {
       cat("\n", pop, "\n")
@@ -1084,7 +1085,8 @@ Functions to compute frequency of allele 0
               cat(qsub.script(cmd,
                               name=sprintf("%s-%s-%03d", pop, c, i),
                               outfile=file.path(stdoutdir, i),
-                              errfile=file.path(stderrdir, i)),
+                              errfile=file.path(stderrdir, i),
+                              level=cluster.level),
                   file=file.path(cmdsdir, sprintf("%03d.sh", i)))
           }
       }

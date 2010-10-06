@@ -139,13 +139,13 @@ make.intervals <- function(n, width, overlap) {
    cbind(start=starts, end=ends)
 }
 
-qsub.script <- function(cmd, name, outfile, errfile)
+qsub.script <- function(cmd, name, outfile, errfile, level=2)
     paste("#$ -N ", name, "\n",
           "#$ -o ", outfile, "\n",
           "#$ -e ", errfile, "\n",
           "#$ -cwd", "\n",
           "#$ -V", "\n",
-          "#$ -pe level2.pe 1", "\n",
+          "#$ -pe level", level, ".pe 1", "\n",
           "#$ -S /bin/bash", "\n",
           cmd, "\n",
           sep="")
