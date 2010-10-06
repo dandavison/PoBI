@@ -1491,7 +1491,11 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
   :PROPERTIES:
   :dir: ~/Work/Papers/PoBI/bench
   :END:
-** Explanatory email
+** Environment
+#+begin_src R :var pops=region-codes[,1] :var dir="POBIdan/ChromoPainterOUTPUT" :var chrom=22
+source("lib/libchromopainter.R")
+#+end_src
+** Explanatory email from Garrett
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: UK-Europe haplotypes
 Date: Thu, 30 Sep 2010 13:34:17 +0100
@@ -1543,21 +1547,16 @@ analyzed).
 Let me know if you have permission troubles as well, etc.
 Garrett
 
-
 ** Questions
+*** Should I be using *.regionchunkcounts.out for copying proportions?
+*** What's the num.regions column in *.regionchunkcounts.out?
 *** No difference between pops in *prop.out files
 *** Why self lower than others in *prop.out files?
-** Plot donor proportions
-#+begin_src R :var pops=region-codes[,1] :var dir="POBIdan/ChromoPainterOUTPUT" :var chrom=22
-  files <- list.files(path=file.path(dir, "LeaveOneOutNeResults"),
-                      pattern=sprintf("...Chrom%sLeaveOneOutNeEst.chunkcounts.out", chrom),
-                      full.names=TRUE)
-  filepops <- substr(basename(files), 1, 3)
-  stopifnot(filepops %in% pops)
-  names(files) <- filepops
-  ## files <- sapply(files, gzfile, "r", simplify=FALSE)
-  x <- sapply(files, read.table, row.names=1, header=TRUE, simplify=FALSE)
-  x <- lapply(x, as.matrix)
+** Donor proportions
+#+begin_src R
+  x <- chromopainter.read.donor.copy.counts(dir)
+  stopifnot(names(x) %in% pops)
+  
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
   
   npops <- length(filepops)
@@ -1590,7 +1589,18 @@ text(pos, labels=rownames(pos))
 #+results:
 [[file:/home/dan/Work/Papers/PoBI/bench/pca.png]]
 
-
+** Recipient proportions
+#+begin_src R
+  x <- chromopainter.read.recipient.copy.counts(dir)
+  stopifnot(names(x) %in% pops)
+  z <- sapply(x, colnames)
+  stopifnot(z == z[,1])
+  
+  x <- lapply(x, as.matrix)
+  px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
+  mpx <- sapply(px, colMeans)
+  
+#+end_src
 
 ** Chunk Lengths
 
