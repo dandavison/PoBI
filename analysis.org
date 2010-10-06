@@ -1039,23 +1039,31 @@ Functions to compute frequency of allele 0
 #+end_src
 
 ** Write per-population per-chunk scripts
-#+begin_src R :var chunk=4000000
+#+begin_src R
   Ne <- 11418
+  chunk <- 5e6
+  snpdensity <- .0002 * .75
   
   for(pop in c(levels(indivs.d$reg2), "All")) {
+      cat("\n", pop, "\n")
       odir <- file.path("impute2", pop)
       dir.create(file.path(odir, "log"), recursive=TRUE)
       for(c in chroms) {
+          cat(c, " ")
           cmdsdir <- file.path(odir, "cmds", c)
           stdoutdir <- file.path(odir, "stdout", c)
           stderrdir <- file.path(odir, "stderr", c)
           outdir <- file.path(odir, "out", c)
+          stopifnot(!file.exists(cmdsdir))
           dir.create(cmdsdir, recursive=TRUE)
           dir.create(stdoutdir, recursive=TRUE)
           dir.create(stderrdir, recursive=TRUE)
           dir.create(outdir, recursive=TRUE)
-          pos <- scan(posfile(c, "w"))
-          intervals <- make.intervals(pos, width=chunk, overlap=100)
+          pos <- scan(posfile(c, "w"), quiet=TRUE)
+          intervals <- make.intervals(length(pos), width=chunk*snpdensity, overlap=200)
+          intervals[] <- pos[c(intervals)]
+          d <- diff(intervals[,"start"])
+          cat(nrow(intervals), "intervals, diff range", range(d), ", ", sum(d > chunk), "above nominal chunk size, ", sum(d > 1.5 * chunk) ,"above 1.5 times nominal\n")
           for(i in seq(nrow(intervals))) {
               cmd <-
                   paste("impute2",

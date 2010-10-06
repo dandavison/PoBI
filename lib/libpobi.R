@@ -124,19 +124,19 @@ compare.haplotypes <- function(h1, h2, imgfile, twon=ncol(h1)) {
     dev.off()
 }
 
-make.intervals <- function(points, width, overlap) {
-    ## Return intervals of width WIDTH overlapping by OVERLAP points
-    n <- length(points)
+make.intervals <- function(n, width, overlap) {
+    ## There are n points on a line. Return start and end indices of
+    ## intervals of width WIDTH, overlapping by OVERLAP points.
     i <- 1
     starts <- 1
     ends <- integer()
     while(TRUE) {
-        ends[i] <- max(which(points < points[starts[i]] + width))
-        if(ends[i] == n) break
+        ends[i] <- starts[i] + width - 1
+        if(ends[i] > n) { ends[i] <- n ; break }
         i <- i+1
-        starts[i] <- max(ends[i-1] - overlap, starts[i-1] + 1)
+        starts[i] <- ends[i-1] - overlap + 1
     }
-    cbind(start=points[starts], end=points[ends])
+   cbind(start=starts, end=ends)
 }
 
 qsub.script <- function(cmd, name, outfile, errfile)
