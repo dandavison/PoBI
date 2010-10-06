@@ -1039,7 +1039,7 @@ Functions to compute frequency of allele 0
 #+end_src
 
 ** Write per-population per-chunk scripts
-#+begin_src R
+#+begin_src R :results output :results replace
   Ne <- 11418
   chunk <- 5e6
   snpdensity <- .0002 * .75
@@ -1092,6 +1092,300 @@ Functions to compute frequency of allele 0
       }
   }
 #+end_src
+
+#+results:
+#+begin_example
+
+ 
+ Belgium 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Denmark 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ France 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Germany 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Ireland 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Italy 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Norway 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Poland 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Spain 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ Sweden 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ UK 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+
+ All 
+01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
+03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
+10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
+17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
+19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
+20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
+21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
+There were 50 or more warnings (use warnings() to see the first 50)
+#+end_example
 
 *** Shell version
     -strand_g frdata/w-$c.gen.strand \
