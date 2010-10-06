@@ -90,14 +90,14 @@ PoBI + MS cases (Illumina)
 *** DONE Sample information
 - Where are German individuals from?
 - Irish?
-*** TODO Create combined MS+PoBI post-QC dataset
+*** DONE Create combined MS+PoBI post-QC dataset
     SCHEDULED: <2010-04-05 Mon>--<2010-04-09 Fri>
     :PROPERTIES:
     :Effort:   32:00
     :allocate: DanChris
     :END:
 
-*** TODO Create phased data sets
+*** STARTED Create phased data sets
     SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
     :PROPERTIES:
     :Effort:   32:00
@@ -105,7 +105,7 @@ PoBI + MS cases (Illumina)
     :END:
 **** All individuals jointly phased using CEU+TSI 
 
-*** TODO Copying analyses
+*** STARTED Copying analyses
     SCHEDULED: <2010-04-19 Mon>--<2010-04-30 Fri>
     :PROPERTIES:
     :Effort:   32:00
@@ -117,25 +117,27 @@ PoBI + MS cases (Illumina)
       greater Iberian contribution?
     - Can we see that Norwegian/German contributions are recent?
     
-*** TODO PCA
-    SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
-    :PROPERTIES:
-    :Effort:   32:00
-    :allocate: Dan
-    :END:
-    - All individuals
-    - UK alone
-      [[file:pobi-pca-scatter-zoom.png]]
+*** TODO Unsupervised learning methods
+**** TODO PCA
+     SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
+     :PROPERTIES:
+     :Effort:   32:00
+     :allocate: Dan
+     :END:
+     - All individuals
+     - UK alone
+       [[file:pobi-pca-scatter-zoom.png]]
 
-*** TODO Unlinked Structure mixture modelling
-    SCHEDULED: <2010-04-26 Mon>--<2010-04-30 Fri>
-    :PROPERTIES:
-    :Effort:   32:00
-    :allocate: Dan
-    :END:
-    - All individuals
-    - UK alone
+**** TODO Structure / Admixture
+     SCHEDULED: <2010-04-26 Mon>--<2010-04-30 Fri>
+     :PROPERTIES:
+     :Effort:   32:00
+     :allocate: Dan
+     :END:
+     - All individuals
+     - UK alone
 
+**** TODO SFA
 *** TODO Analysis of UK regions
     :PROPERTIES:
     :Effort:   32:00
@@ -143,7 +145,6 @@ PoBI + MS cases (Illumina)
     :END:
     - SNP-by-SNP \Chi-squared / F_st tests
       - Q-Q plots
-
 *** TODO Differentiation at loci of interest
     :PROPERTIES:
     :Effort:   32:00
@@ -194,7 +195,6 @@ PoBI + MS cases (Illumina)
     Is there to be a less UK-centric Europe paper?
 * Continental Data
 *** Illumina
-
 *** Affy
 |         | POPRES | Kiel (=popgen) | PoBI       |
 |---------+--------+----------------+------------|
@@ -341,7 +341,8 @@ to match HapMap3 pops)
 	
 * Emails
 [[gnus:nnmairix%2Bmairix:#FB068F92BA9F2C45BEBCC3E7C1F32B260B93B7@exchange1.stats.ox.ac.uk][Email from Chris Spencer: FW: MS good news]]
-* Abstract
+* Paper
+** Abstract
 The post-glacial history of human occupation of the British Isles has
 received a lot of attention from archeologists and historians during
 the last 250 years, and from geneticists during the last three
@@ -351,20 +352,30 @@ principal component analyses recover genome-wide geographic clines
 that are consistent with continental patterns and thus consistent with
 a null model of isolation by distance.
 
-* Introduction
-* Results
-*** PCA: congruence of genetic and geographic maps
+** Introduction
+** Results
+*** Genotype-based
+**** Allele frequency differentiation
+***** Candidate SNPs
+**** Proxy-population admixture analyses
+**** Unsupervised clustering/ordination
+***** PCA: congruence of genetic and geographic maps
 [[file:pobi-pca-scatter-zoom.png]]    
-*** Structure (parallel)
-*** Copying source populations
-    
-    Use Affy data for individuals from the Iberian and "northern
-    German" areas of the POPRES map, and from Kiel.
+***** Structure
+***** SFA
+**** IBD sharing HMM
+     How many between-region relatives?
+*** Haplotype-based
+**** Copying HMM
+     Use Affy data for individuals from the Iberian and "northern
+     German" areas of the POPRES map, and from Kiel.
 
-    - fit HMM to one UK individual at a time
-    - fit to unphased data?
-*** Relatedness
-*** Haplogroups
+     - fit HMM to one UK individual at a time
+     - fit to unphased data?
+**** Haploid unsupervised model?
+     Post-process to look at geographic origin of chomosomes in
+     individuals?
+**** Haplogroups
 * Notes								   :noexport:
 *** Cristian Capelli
     papers
@@ -379,10 +390,9 @@ a null model of isolation by distance.
      - richards
      - curr biol review
      - encyl. life sciences: wilson, capelli, richards
-     - 
 
 * Config							   :noexport:
-#+seq_todo: TODO | DONE
+#+seq_todo: TODO STARTED | DONE
 #+options: toc:nil num:nil
 #+PROPERTY: Effort_ALL 0 1:00 2:00 4:00 8:00 16:00 32:00 64:00 128:00
 #+COLUMNS: %60ITEM(Task) %10allocate(Resource) %17Effort(Estimated Effort){:} %CLOCKSUM
