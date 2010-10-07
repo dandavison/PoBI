@@ -4,7 +4,7 @@
 * Environment
 ** Org
 #+babel:   :dir /davison@oak.well.ox.ac.uk:~/bench :results output silent
-#+options: ^:{}
+#+options: ^:{} hideblocks
 
 #+begin_src emacs-lisp :cache no
   (setq org-babel-default-header-args:R '((:session . "*R-PoBI*")))
@@ -23,6 +23,11 @@
   system("mkdir -p stitched img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
 
   chroms <- sprintf("%02d", 1:22)
+  Ne <- 11418
+  chunk <- 5e6
+  snpdensity <- .0002 * .75
+  cluster.level <- 3
+  noverlap <- 199
 #+end_src
 *** Data file functions
 #+begin_src R
@@ -136,7 +141,7 @@
    | UK      | 2578 |
 
    #+begin_src R :var x=sample-sizes[,1] :session none :results replace :dir /tmp
-     sum(x[1,])
+     sum(x)
    #+end_src
 
    #+results:
@@ -1037,14 +1042,8 @@ Functions to compute frequency of allele 0
   }
   cat("", file=indivexcludefile("All", "w"))
 #+end_src
-
 ** Write per-population per-chunk scripts
 #+begin_src R :results output :results replace
-  Ne <- 11418
-  chunk <- 5e6
-  snpdensity <- .0002 * .75
-  cluster.level <- 3
-
   for(pop in c(levels(indivs.d$reg2), "All")) {
       cat("\n", pop, "\n")
       odir <- file.path("impute2", pop)
@@ -1061,7 +1060,7 @@ Functions to compute frequency of allele 0
           dir.create(stderrdir, recursive=TRUE)
           dir.create(outdir, recursive=TRUE)
           pos <- scan(posfile(c, "w"), quiet=TRUE)
-          intervals <- make.intervals(length(pos), width=chunk*snpdensity, overlap=200)
+          intervals <- make.intervals(length(pos), width=chunk*snpdensity, overlap=noverlap)
           intervals[] <- pos[c(intervals)]
           d <- diff(intervals[,"start"])
           cat(nrow(intervals), "intervals, diff range", range(d), ", ", sum(d > chunk), "above nominal chunk size, ", sum(d > 1.5 * chunk) ,"above 1.5 times nominal\n")
@@ -1410,7 +1409,6 @@ There were 50 or more warnings (use warnings() to see the first 50)
             > impute2/cmds/$c.sh
       done
     #+end_src
-
 ** Test phasing
 *** DONE Run twice on same input
 #+begin_src sh
@@ -1542,18 +1540,29 @@ null device
 #+end_src
 
 #+results:
+*** Check overlaps
+#+begin_src R :results value replace
+p <- lapply(chroms, function(c) scan(posfile(c, "w"), quiet=TRUE))
+i <- lapply(p, function(pos) make.intervals(length(pos), width=chunk*snpdensity, overlap=noverlap+1))
+o <- lapply(i, function(ints) ints[-nrow(ints),"end"] - ints[-1,"start"])
+unique(unlist(o))
+#+end_src
+
+#+results:
+: 199
 
 ** Stitch haplotypes
-#+begin_src R :var pops=sample-sizes[,0] :var nolap=101
-  chrom.nchunks <- c("22"=10)
+#+begin_src R :var pops=sample-sizes[,0] :var nolap=200
+  chrom.nchunks <- c("18"=28, "20"=24, "22"=14)
   pops <- as.character(pops)
   for(pop in pops) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
-      for(c in "22") {
+      for(c in names(chrom.nchunks)) {
           outdir <- file.path("impute2", pop, "out", c)
           hapfiles <- list.files(outdir, pattern="^[0-9]+_haps$", full.names=TRUE)
           stopifnot(length(hapfiles) == chrom.nchunks[c])
-          stitch.haplotypes(hapfiles, ids, stitchedfile(c, pop), nolap=nolap)
+          cat(sprintf("%20s %s\n", pop, c))
+          stitch.haplotypes(hapfiles, ids, stitchedfile(c, pop), nolap=noverlap)
       }
   }
 #+end_src
