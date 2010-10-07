@@ -18,10 +18,10 @@
 #+begin_src R
   source("lib/libpobi.R")
   source("lib/libwtccc2.R")
-  
+
   PATH <- "/home/davison/src/shellfish/bin"
   system("mkdir -p stitched img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
-  
+
   chroms <- sprintf("%02d", 1:22)
 #+end_src
 *** Data file functions
@@ -380,7 +380,7 @@ wc -l data/POBI+MS/*-allx.ids
    :END:
 *** DONE Numbers in raw files
 
-#+begin_example 
+#+begin_example
 ~/bench/data/POBI+MS-test> bash z.sh
 Wed Aug 25 20:00:04 2010
 Analysis                      PCA
@@ -432,7 +432,7 @@ wc -l < ~/data/wtccc2/$coh/illumina/calls/${coh}_illumina.sample
 #+results: numindivs(coh="MS")
 : 11378
 
-#+begin_example 
+#+begin_example
 mv 22-MS.sample 22-MSr.sample
 shellfish --make-gen --file 22-POBI  --out 22-POBIr --messy
 2010-08-25_20.00.24
@@ -449,7 +449,7 @@ shellfish version 0.0.8
 **** MS
 ***** DONE Unrecognised individs
 
-#+begin_example 
+#+begin_example
 Excluding individuals
 
 cat /data/oak/project/wtccc2/MS/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > 22-MS.xids
@@ -462,7 +462,7 @@ MS: 1 excluded individuals not recognised
   MS.ids.x <- scan("22-MS.xids", what="", quiet=TRUE)
   MS.samplef <- "/data/oak/project/wtccc2/MS/illumina/calls/MS_illumina.sample"
   MS.ids.full <- scan(pipe(sprintf("sed 1,2d %s | cut -d ' ' -f 1", MS.samplef)), what="", quiet=TRUE)
-  
+
   ok <- MS.ids.x %in% MS.ids.full
   cat("Number of individs: ", length(MS.ids.full), "\n")
   cat("Number of individs to be excluded: ", length(MS.ids.x), "\n")
@@ -472,7 +472,7 @@ MS: 1 excluded individuals not recognised
 #+end_src
 
 #+results:
-: 
+:
 :  Number of individs:  11376
 : Number of individs to be excluded:  5688
 : Of these number recognised:  5687
@@ -531,7 +531,7 @@ echo -n "Num_indivs_in_gen_file "
 
 **** PoBI
 ***** Unrecognised individs
-#+begin_example 
+#+begin_example
     cat /data/oak/project/wtccc2/POBI/illumina/exclusions/*.exclude.txt ../MS/exclusions.all | sort | uniq > 22-POBI.xids
     sed 1,2d /data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample | cut -d ' ' -f 1 | match 22-POBI.xids > 22-POBI.xidx
     POBI: 5565 excluded individuals not recognised
@@ -544,7 +544,7 @@ This 5565 is the number of indivs in MS/exclusions.all, so that makes sense.
   POBI.ids.x <- scan("22-POBI.xids", what="", quiet=TRUE)
   POBI.samplef <- "/data/oak/project/wtccc2/POBI/illumina/calls/POBI_illumina.sample"
   POBI.ids.full <- scan(pipe(sprintf("sed 1,2d %s | cut -d ' ' -f 1", POBI.samplef)), what="", quiet=TRUE)
-  
+
   ok <- POBI.ids.x %in% POBI.ids.full
   cat("Number of individs: ", length(POBI.ids.full), "\n")
   cat("Number of individs to be excluded: ", length(POBI.ids.x), "\n")
@@ -552,7 +552,7 @@ This 5565 is the number of indivs in MS/exclusions.all, so that makes sense.
 #+end_src
 
 #+results:
-: 
+:
 :  Number of individs:  2912
 : Number of individs to be excluded:  5899
 : Of these number recognised:  334
@@ -577,7 +577,7 @@ wc -l 22-POBIx.ids
 | 2578 | 22-POBIx.ids |
 
 *** Combine across cohorts
-#+begin_example 
+#+begin_example
 Combining data across cohorts
 
 cut -d ' ' -f 1-5 < 22-MSx.gen > 22-MSx.map
@@ -611,7 +611,7 @@ wc -l *.ids
       ln -fs \
           ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/hapmap3.r2.b36.allMinusPilot1CEU.chr$i.snpfilt.haps \
           `printf "%02d" $i`.hap
-  
+
       ln -fs \
           ../hapmap3_r2_plus_1000g_jun2010_b36_ceu/hapmap3.r2.b36.allMinusPilot1CEU.chr$i.snpfilt.legend \
           `printf "%02d" $i`.legend
@@ -629,7 +629,7 @@ wc -l *.ids
                  read.table(pipe(sprintf("cut -d' ' -f2-5 < %s", datafile(chr,"w"))),
                             header=FALSE, as.is=TRUE, col.names=c("rs","pos","a0","a1")))
   names(dd$h) <- names(dd$w)  <- chroms
-  
+
   df <- data.frame(row.names=chroms)
   df$Lh <- sapply(dd$h, nrow)
   df$Lw <- sapply(dd$w, nrow)
@@ -663,14 +663,14 @@ We're going to flip WTCCC2 to match HapMap3
           ##     ## legend and mapfiles have headers
           ##     lfile <- tempfile()
           ##     cat(map+1, sep="\n", file=lfile)
-    
+
           ##     cmd <- paste(file.path(PATH, "lines"),
           ##                  "-f", lfile,
           ##                  "<", legendfile(c, "h"),
           ##                  ">", rlegendfile(c, "h"))
           ##     print(cmd)
           ##     system(cmd)
-    
+
           ##     cmd <- paste(file.path(PATH, "lines"),
           ##                  "-f", lfile,
           ##                  "<", mapfile(c, "h"),
@@ -748,7 +748,7 @@ We're going to flip WTCCC2 to match HapMap3
       ind[ok] <- scan(pipe(sprintf("%s/flipind < %s", PATH, file)), what=integer())
       ind
   }
-  
+
   for(c in chroms)
       for(d in "w") {
           cat(flipind(isect[[c]], flipinputfile(c, d)), file=flipindfile(c, d), sep="\n")
@@ -766,7 +766,7 @@ We're going to flip WTCCC2 to match HapMap3
                    frdatafile(c, "w"))
     print(cmd)
     system(cmd)
-  
+
     cmd <- sprintf("ln -fs $PWD/%s %s", rdatafile(c, "h"), frdatafile(c, "h"))
     print(cmd)
     system(cmd)
@@ -895,15 +895,15 @@ Was:
       ## Read in hapmap haplotypes in intersection
       freq[[c]]$h <- 1 - colMeans(matrix(scan(frdatafile(c, "h"), what=integer()), nrow=nh))
       cat(freq[[c]]$h, sep="\n", file=freqfile(c,"h"))
-      
+
       ## Create w freq file
       cmd <- sprintf("%s/sstat -p -n %d < %s > %s",
                      PATH, nwtccc2, frdatafile(c,"w"), freqfile(c,"w"))
       print(cmd)
       system(cmd)
       freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
-      cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))   
-  
+      cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))
+
       png(file=sprintf("img/%s-freqs.png", c))
       plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
       dev.off()
@@ -922,7 +922,7 @@ Functions to compute frequency of allele 0
       wg <- matrix(as.numeric(w[6:length(w)]), nrow=3)
       mean(t(2:0) %*% wg) / 2
   }
-  
+
   hfrequency <- function(c, i)
       1 - mean(scan(pipe(sprintf("sed -n -e %dp -e %dq < %s",
                                  i, i, rdatafile(c, "h"))),
@@ -946,7 +946,7 @@ Functions to compute frequency of allele 0
         pipe.h <- function(c)
             pipe(sprintf("sed -n -e %dp -e %dq < %s | cut -d' ' -f3-4",
                          idx, idx, rlegendfile(c, "h")))
-      
+
         data.frame(rs = rs,
                    chr = c,
                    alleles.w = paste(scan(pipe.w(c), what=""), collapse="/"),
@@ -954,7 +954,7 @@ Functions to compute frequency of allele 0
                    freq.w = round(wfrequency(c, idx), 2),
                    freq.h = round(hfrequency(c, idx), 2))
     }
-    
+
     do.call("rbind", lapply(rsids[,1], check.snp, "22"))
 #+end_src
 
@@ -1044,7 +1044,7 @@ Functions to compute frequency of allele 0
   chunk <- 5e6
   snpdensity <- .0002 * .75
   cluster.level <- 3
-  
+
   for(pop in c(levels(indivs.d$reg2), "All")) {
       cat("\n", pop, "\n")
       odir <- file.path("impute2", pop)
@@ -1096,8 +1096,8 @@ Functions to compute frequency of allele 0
 #+results:
 #+begin_example
 
- 
- Belgium 
+
+ Belgium
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1121,7 +1121,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Denmark 
+ Denmark
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1145,7 +1145,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- France 
+ France
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1169,7 +1169,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Germany 
+ Germany
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1193,7 +1193,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Ireland 
+ Ireland
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1217,7 +1217,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Italy 
+ Italy
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1241,7 +1241,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Norway 
+ Norway
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1265,7 +1265,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Poland 
+ Poland
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1289,7 +1289,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Spain 
+ Spain
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1313,7 +1313,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Sweden 
+ Sweden
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1337,7 +1337,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- UK 
+ UK
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1361,7 +1361,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- All 
+ All
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1394,7 +1394,7 @@ There were 50 or more warnings (use warnings() to see the first 50)
 
     #+begin_src sh
       mkdir -p impute2/cmds impute2/out
-      
+
       for c in `seq -w 1 21` ; do
           echo \
               impute2 \
@@ -1441,11 +1441,11 @@ done
   h2 <- read.haplotypes(hfile2, ids=ids.pop)
   leg <- read.chiamo.legend(rdatafile(chrom, "w"))
   stopifnot(identical(dimnames(h1), dimnames(h2)))
-  
+
   ## Check hap SNPs are SNPs in interval
   in.int <- leg$pos > int0 & leg$pos < int1
   stopifnot(leg$ID_2[in.int] == rownames(h1))
-  
+
   compare.haplotypes(h1, h2)
 #+end_src
 
@@ -1460,12 +1460,12 @@ closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/1_haps)
 Read 1018 items
 Read 118088 items
 Warning messages:
-1: closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/2_haps) 
+1: closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/2_haps)
 2: closing unused connection 4 (cut -d ' ' -f 6- < impute2-test/1_haps)
 Warning message:
 closing unused connection 5 (cut -d ' ' -f 6- < impute2-test/2_haps)
  Comparing haplotypes
-null device 
+null device
           1
 #+end_example
 
@@ -1478,11 +1478,11 @@ null device
   h2 <- read.haplotypes(hfile2, ids=ids.pop)
   leg <- read.chiamo.legend(rdatafile(chrom, "w"))
   stopifnot(identical(dimnames(h1), dimnames(h2)))
-  
+
   ## Check hap SNPs are SNPs in interval
   in.int <- leg$pos >= int0 & leg$pos <= int1
   stopifnot(rownames(h1) %in% leg$ID_2[in.int])
-  
+
   compare.haplotypes(h1, h2, "Poland-chr22-006.png")
 #+end_src
 
@@ -1497,12 +1497,12 @@ closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/1_haps)
 Read 1018 items
 Read 118088 items
 Warning messages:
-1: closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/2_haps) 
+1: closing unused connection 3 (cut -d ' ' -f 2 < impute2-test/2_haps)
 2: closing unused connection 4 (cut -d ' ' -f 6- < impute2-test/1_haps)
 Warning message:
 closing unused connection 5 (cut -d ' ' -f 6- < impute2-test/2_haps)
  Comparing haplotypes
-null device 
+null device
           1
 #+end_example
 *** Validate phasing
@@ -1513,7 +1513,7 @@ null device
       r <- rle(hap1 == hap2)
       r$lengths[r$values]
   }
-  
+
 #+end_src
 
 ***** Compare Orkney vs Norway and Spain vs Norway
@@ -1523,10 +1523,10 @@ null device
   pop1 <- "Norway"
   haps <- read.haplotypes(hapfile(chrom, "w"), ids)
   h1 <- extract.haplotypes(pop1, haps, indivs.d)
-  
+
   n1 <- min(nmax,ncol(h1))
   n2 <- min(nmax,ncol(h2))
-  
+
   id.lengths <- list()
   id.lengths[[pop1]] <- list()
   for(pop2 in c("Orkney","Spain")) {
@@ -1567,19 +1567,19 @@ null device
   stopifnot(pops[pops != "UK"] %in% names(codes))
   stopifnot(levels(indivs.d$reg) %in% names(codes))
   UKregions <- unique(as.character(indivs.d$reg[indivs.d$reg2 == "UK"]))
-  
+
   write.garrett.recomb.file <- function(chrom, leg) {
       op <- options() ; on.exit(options(op))
       options(scipen=100, digits=15)
       hmap <- read.table(mapfile(chrom, "h"), header=TRUE, as.is=TRUE)
       r <- approx(hmap[c("position","COMBINED_rate.cM.Mb.")], xout=leg$pos)$y
       stopifnot(diff(leg$pos) > 0)
-      write.table(cbind(start.pos=leg$pos, recom.rate.perbp=r*1e-8), 
+      write.table(cbind(start.pos=leg$pos, recom.rate.perbp=r*1e-8),
                   file=g.recombfile(chrom), quote=FALSE, row.names=FALSE, col.names=TRUE)
   }
-  
+
   indiv2hap.idx <- function(idx) c(rbind(2*idx - 1, 2*idx))
-  
+
   write.garrett.haplotype.and.id.files <- function(haps, ids, pos, chrom, pop, perm) {
       stopifnot(ncol(haps) == 2*length(ids))
       stopifnot(nrow(haps) == length(pos))
@@ -1601,12 +1601,12 @@ null device
       else
           cat("File exists -- should check same contents\n")
   }
-  
+
   set.seed(14011978)
   perms <- sapply(levels(indivs.d$reg), function(reg) sample(1:sum(indivs.d$reg == reg)),
                   simplify=FALSE)
   names(perms) <- codes[names(perms)]
-  
+
   for(c in chroms) {
       leg0 <- read.chiamo.legend(stitchedfile(c, "Norway"))
       if(!file.exists(g.legfile(c)))
@@ -1624,7 +1624,7 @@ null device
               write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos,
                                                    chrom=c, pop=codes[pop], perm=perms[[codes[pop]]])
           else {
-              for(UKreg in UKregions) { 
+              for(UKreg in UKregions) {
                   inUK <- indivs.d$reg2 == "UK"
                   inreg <- indivs.d[inUK,"reg"] == UKreg
                   haps.reg <- haps[,rep(inreg, each=2),drop=FALSE]
@@ -1636,38 +1636,38 @@ null device
           }
       }
   }
-  
+
   write.table(cbind(codes, gsub(" ", "_", names(codes))),
                     file=g.codesfile(), quote=FALSE, row.names=FALSE, col.names=FALSE)
   recipients <- codes[c(UKregions, "Ireland")]
   donors <- codes[pops[! pops %in% c("UK","Ireland")]]
   cat(recipients, file=g.recipientfile(), sep="\n")
   cat(donors, file=g.donorfile(), sep="\n")
-  
+
   write.donorlist <- function(recipient, donors, n, ndonors) {
       stopifnot(names(n) == c(donors, recipient))
       n[donors] <- ndonors
       write.table(n, file=g.donorlistfile(recipient),
                   quote=FALSE, row.names=TRUE, col.names=FALSE)
   }
-  
+
   tab <- table(codes[as.character(indivs.d$reg)])
   for(recip in recipients)
       write.donorlist(recip, donors, tab[c(donors,recip)], ndonors)
-  
-  
+
+
 #+end_src
 
 #+results:
-: 
+:
 :  Read 7624 items
 : Read 884384 items
 : Warning messages:
-: 1: closing unused connection 3 (cut -d ' ' -f 2 < impute2/Poland/out/22/all.hen) 
+: 1: closing unused connection 3 (cut -d ' ' -f 2 < impute2/Poland/out/22/all.hen)
 : 2: closing unused connection 4 (cut -d ' ' -f 6- < impute2/Poland/out/22/all.hen)
 
 ** email
-#+begin_example 
+#+begin_example
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: this week
 Date: Fri, 18 Jun 2010 12:24:27 +0100
@@ -1860,25 +1860,25 @@ Garrett
 #+begin_src R
   x <- chromopainter.read.donor.copy.counts(dir)
   stopifnot(names(x) %in% pops)
-  
+
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
-  
+
   npops <- length(filepops)
   for(pop in names(px)) {
       stopifnot(colnames(px[[pop]])[npops] == "Self")
       colnames(px[[pop]])[npops] <- pop
       px[[pop]] <- px[[pop]][,order(colnames(px[[pop]]))]
   }
-  
+
   z <- sapply(px, colnames)
   stopifnot(z == z[,1], rownames(z) == filepops, colnames(z) == filepops)
-  
-  
+
+
   mpx <- sapply(px, colMeans)
   image(mpx, xaxt="n", yaxt="n")
   for(ax in 1:2)
       axis(ax, labels=filepops, at=seq(0, 1, length=npops))
-  
+
 #+end_src
 *** PCA plot
     PCA of pairwise mean copying proportions between donor countries.
@@ -1899,11 +1899,11 @@ text(pos, labels=rownames(pos))
   stopifnot(names(x) %in% pops)
   z <- sapply(x, colnames)
   stopifnot(z == z[,1])
-  
+
   x <- lapply(x, as.matrix)
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
   mpx <- sapply(px, colMeans)
-  
+
 #+end_src
 
 ** Chunk Lengths
@@ -1919,7 +1919,7 @@ text(pos, labels=rownames(pos))
   x <- sapply(files, read.table, row.names=1, header=TRUE, simplify=FALSE)
   x <- lapply(x, as.matrix)
   mx <- sapply(x, colMeans)
-  
+
 #+end_src
 
 * PCA
@@ -1938,11 +1938,11 @@ text(pos, labels=rownames(pos))
 
 #+results:
 : building file list ... done
-: 
+:
 : sent 314 bytes  received 20 bytes  668.00 bytes/sec
 : total size is 612863  speedup is 1834.92
 : sending incremental file list
-: 
+:
 : sent 284 bytes  received 13 bytes  198.00 bytes/sec
 : total size is 612863  speedup is 2063.51
 
