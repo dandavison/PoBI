@@ -27,7 +27,7 @@
   chunk <- 5e6
   snpdensity <- .0002 * .75
   cluster.level <- 3
-  noverlap <- 199
+  noverlap <- 200
 #+end_src
 *** Data file functions
 #+begin_src R
@@ -1543,7 +1543,7 @@ null device
 *** Check overlaps
 #+begin_src R :results value replace
 p <- lapply(chroms, function(c) scan(posfile(c, "w"), quiet=TRUE))
-i <- lapply(p, function(pos) make.intervals(length(pos), width=chunk*snpdensity, overlap=noverlap+1))
+i <- lapply(p, function(pos) make.intervals(length(pos), width=chunk*snpdensity, overlap=noverlap))
 o <- lapply(i, function(ints) ints[-nrow(ints),"end"] - ints[-1,"start"])
 unique(unlist(o))
 #+end_src
@@ -1552,8 +1552,8 @@ unique(unlist(o))
 : 199
 
 ** Stitch haplotypes
-#+begin_src R :var pops=sample-sizes[,0] :var nolap=200
-  chrom.nchunks <- c("18"=28, "20"=24, "22"=14)
+#+begin_src R :var pops=sample-sizes[,0]
+  chrom.nchunks <- c("18"=28, "20"=24) ##, "22"=14)
   pops <- as.character(pops)
   for(pop in pops) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
@@ -1565,12 +1565,13 @@ unique(unlist(o))
           stitch.haplotypes(hapfiles, ids, stitchedfile(c, pop), nolap=noverlap)
       }
   }
+
 #+end_src
 
 * STARTED Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
   ndonors <- 50
-  chroms <- "22"
+  chroms <- c("18","20")
   pops <- levels(indivs.d$reg2)
   codes <- structure(codes.d[[2]], names=codes.d[[1]])
   stopifnot(pops[pops != "UK"] %in% names(codes))
