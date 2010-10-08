@@ -165,7 +165,16 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
         stopifnot(leg2$ID_2[1] %in% leg1$ID_2)
         ostart1 <- which(leg2$ID_2[1] == leg1$ID_2)
         o1.idx <- ostart1:n1
-        stopifnot(length(o1.idx) == nolap)
+        print(length(o1.idx))
+
+        ##stopifnot(length(o1.idx) == nolap)
+        if(length(o1.idx) != nolap) {
+            msg <- paste(length(o1.idx), "in overlapping region yet nolap=", nolap, "\n")
+            cat(msg)
+            warning(msg)
+        }
+
+        nolap <- length(o1.idx)
         o2.idx <- 1:nolap
         stopifnot(leg1$ID_2[n1] == leg2$ID_2[nolap])
         stopifnot(leg1$ID_2[o1.idx] == leg2$ID_2[o2.idx])
@@ -230,7 +239,14 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
         h <- read.haplotypes(f, ids)
         l <- read.chiamo.legend(f)
         hl <- match.haplotypes(hprev, lprev, h, l)
-        stopifnot(nrow(hl$h)+nolap == nrow(h), nrow(hl$l)+nolap == nrow(l))
+##        stopifnot(nrow(hl$h)+nolap == nrow(h), nrow(hl$l)+nolap == nrow(l))
+        if(nrow(hl$h)+nolap == nrow(h) || nrow(hl$l)+nolap == nrow(l)) {
+            msg1 <- paste(f, "\n",nrow(hl$h), "+", nolap, "vs.", nrow(h), "\n")
+            msg2 <- paste(nrow(hl$l),"+",nolap,"vs.", nrow(l))
+            msg <- paste(msg1, msg2)
+            cat(msg)
+            warning(msg)
+        }
         write.haplotypes(hl$l, hl$h, outfile, append=TRUE)
         hprev <- hl$h
         lprev <- hl$l
