@@ -1913,14 +1913,13 @@ text(pos, labels=rownames(pos))
   x <- lapply(x, as.matrix)
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
   mpx <- sapply(px, colMeans)
-
 #+end_src
 
 ** Chunk Lengths
 
 #+begin_src R :var pops=region-codes[,1]
-  dir="POBIdan/ChromoPainterOUTPUT/PaintingSamples"
-  files <- list.files(path=dir, pattern="...Chrom22PaintingNeEstSamples\\.chunklengths\\.out",
+  files <- list.files(path=file.path(dir, "PaintingSamples"),
+                      pattern="...Chrom22PaintingNeEstSamples\\.chunklengths\\.out",
                       full.names=TRUE)
   filepops <- substr(basename(files), 1, 3)
   stopifnot(filepops %in% pops)
