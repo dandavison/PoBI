@@ -209,8 +209,8 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
                 w <- min(w + olap.nuse, nolap)
                 cat("Extending overlap region to", w, "\n")
             }
-                
-            print(round(p, 2))
+
+            ## print(round(p, 2))
             p11 <- p[1,1] + p[2,2]
             p12 <- p[1,2] + p[2,1]
             if(p11 == p12)
