@@ -245,6 +245,8 @@
    #+end_src
 
    #+results:
+   | nreg    | 41 |
+   | nunique | 41 |
 
 * DONE MS exclusions
 #+begin_src R
@@ -1809,6 +1811,7 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 #+begin_src R :var pops=region-codes[,1] :var dir="POBIdan/ChromoPainterOUTPUT" :var chrom=22
 source("lib/libchromopainter.R")
 #+end_src
+
 ** Explanatory email from Garrett
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: UK-Europe haplotypes
@@ -1928,7 +1931,6 @@ text(pos, labels=rownames(pos))
   x <- sapply(files, read.table, row.names=1, header=TRUE, simplify=FALSE)
   x <- lapply(x, as.matrix)
   mx <- sapply(x, colMeans)
-
 #+end_src
 
 * PCA
