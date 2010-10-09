@@ -71,13 +71,17 @@
 
 ** R environment
 *** Variables
-#+begin_src R
+#+begin_src R :var region.codes=region-codes
   source("lib/libpobi.R")
   source("lib/libwtccc2.R")
+  source("lib/libchromopainter.R")
+  cpdir="POBIdan/ChromoPainterOUTPUT"
 
   PATH <- "/home/davison/src/shellfish/bin"
   system("mkdir -p stitched img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
 
+  pops <- region.codes[[2]]
+  popcodes <- structure(pops, names=region.codes[[1]])
   chroms <- sprintf("%02d", 1:22)
   Ne <- 11418
   chunk <- 5e6
@@ -165,21 +169,24 @@
 *** Individuals data
 #+begin_src R
   indivs.d <- pobi.ms.read.samplefile()
-  ids <- scan(individfile("w"), what="")
+  ids <- scan(individfile("w"), what="", quiet=TRUE)
   stopifnot(ids %in% rownames(indivs.d))
   indivs.d <- indivs.d[ids,]
   indivs.d$isPoBI <- seq(nrow(indivs.d)) %in% grep("^POBI", indivs.d$ID_2)
-  indivs.d$reg <- as.character(indivs.d$reg)
-  indivs.d$reg[indivs.d$reg == "NA"] <- "Unknown"
+  stopifnot(!is.na(indivs.d$reg), indivs.d$reg != "NA")
   indivs.d$reg <- factor(indivs.d$reg)
   indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
   nwtccc2 <- nrow(indivs.d)
   stopifnot(nwtccc2 == 8267)
 #+end_src
-
 ** Sample sizes
+   :PROPERTIES:
+   :results: value replace
+   :END:
+
+
    #+source: sample-sizes
-   #+begin_src R :results value replace
+   #+begin_src R
    table(indivs.d$reg2)
    #+end_src
 
@@ -196,20 +203,62 @@
    | Sweden  | 1212 |
    | UK      | 2578 |
 
-   #+begin_src R :var x=sample-sizes[,1] :session none :results replace :dir /tmp
+   #+begin_src R :var x=sample-sizes[,1]
      sum(x)
    #+end_src
 
    #+results:
-   : [1] 8267
+   : 8267
 
 
    #+source: sample-sizes-1
-   #+begin_src R :results value replace
+   #+begin_src R
    table(indivs.d$reg)
    #+end_src
 
    #+results: sample-sizes-1
+   | Argyll and Bute     |   49 |
+   | Banff and Buchan    |   64 |
+   | Cheshire            |   52 |
+   | Cornwall            |  104 |
+   | Cumbria             |  259 |
+   | Derbyshire          |   11 |
+   | Devon               |   90 |
+   | Dorset              |   45 |
+   | Forest of Dean      |   48 |
+   | Gloucestershire     |   47 |
+   | Hampshire           |   50 |
+   | Herefordshire       |   31 |
+   | Kent                |   74 |
+   | Lancashire          |   45 |
+   | Leicestershire      |   88 |
+   | Lincolnshire        |  151 |
+   | Norfolk             |  119 |
+   | North East          |  227 |
+   | North Pembrokeshire |   56 |
+   | North Wales         |   87 |
+   | Northamptonshire    |   47 |
+   | Northern Ireland    |   62 |
+   | Nottinghamshire     |   80 |
+   | Orkney              |  101 |
+   | Oxfordshire         |  122 |
+   | South Pembrokeshire |   14 |
+   | Suffolk             |  105 |
+   | Sussex              |   81 |
+   | Worcestershire      |   42 |
+   | Yorkshire           |  227 |
+   | Belgium             |  544 |
+   | Denmark             |  332 |
+   | France              |  479 |
+   | Germany             | 1100 |
+   | Ireland             |   61 |
+   | Italy               |  745 |
+   | Norway              |  953 |
+   | Poland              |   58 |
+   | Spain               |  205 |
+   | Sweden              | 1212 |
+
+   #+tblname: old-sample-sizes-1
    | Argyll and Bute     |   45 |
    | Banff and Buchan    |   67 |
    | Belgium             |  544 |
@@ -256,6 +305,52 @@
      new$old <- old[rownames(new),1]
      new
    #+end_src
+
+#+results:
+|                     |  new |  old |
+|---------------------+------+------|
+| Argyll and Bute     |   49 |   45 |
+| Banff and Buchan    |   64 |   67 |
+| Cheshire            |   52 |   49 |
+| Cornwall            |  104 |   73 |
+| Cumbria             |  259 |  261 |
+| Derbyshire          |   11 |   10 |
+| Devon               |   90 |   78 |
+| Dorset              |   45 |   39 |
+| Forest of Dean      |   48 |   57 |
+| Gloucestershire     |   47 |   46 |
+| Hampshire           |   50 |   47 |
+| Herefordshire       |   31 |   29 |
+| Kent                |   74 |   60 |
+| Lancashire          |   45 |   39 |
+| Leicestershire      |   88 |   85 |
+| Lincolnshire        |  151 |  152 |
+| Norfolk             |  119 |  109 |
+| North East          |  227 |  219 |
+| North Pembrokeshire |   56 |   54 |
+| North Wales         |   87 |   77 |
+| Northamptonshire    |   47 |   57 |
+| Northern Ireland    |   62 |   44 |
+| Nottinghamshire     |   80 |   79 |
+| Orkney              |  101 |  136 |
+| Oxfordshire         |  122 |  127 |
+| South Pembrokeshire |   14 |   15 |
+| Suffolk             |  105 |   96 |
+| Sussex              |   81 |   86 |
+| Worcestershire      |   42 |   35 |
+| Yorkshire           |  227 |  202 |
+| Belgium             |  544 |  544 |
+| Denmark             |  332 |  332 |
+| France              |  479 |  479 |
+| Germany             | 1100 | 1100 |
+| Ireland             |   61 |   61 |
+| Italy               |  745 |  745 |
+| Norway              |  953 |  953 |
+| Poland              |   58 |   58 |
+| Spain               |  205 |  205 |
+| Sweden              | 1212 | 1212 |
+
+
 
 
 * DONE MS exclusions
@@ -1585,9 +1680,8 @@ unique(unlist(o))
   ndonors <- 50
   chroms <- c("18","20")
   pops <- levels(indivs.d$reg2)
-  codes <- structure(codes.d[[2]], names=codes.d[[1]])
-  stopifnot(pops[pops != "UK"] %in% names(codes))
-  stopifnot(levels(indivs.d$reg) %in% names(codes))
+  stopifnot(pops[pops != "UK"] %in% names(popcodes))
+  stopifnot(levels(indivs.d$reg) %in% names(popcodes))
   UKregions <- unique(as.character(indivs.d$reg[indivs.d$reg2 == "UK"]))
 
   write.garrett.recomb.file <- function(chrom, leg) {
@@ -1627,7 +1721,7 @@ unique(unlist(o))
   set.seed(14011978)
   perms <- sapply(levels(indivs.d$reg), function(reg) sample(1:sum(indivs.d$reg == reg)),
                   simplify=FALSE)
-  names(perms) <- codes[names(perms)]
+  names(perms) <- popcodes[names(perms)]
 
   for(c in chroms) {
       leg0 <- read.chiamo.legend(stitchedfile(c, "Norway"))
@@ -1644,7 +1738,7 @@ unique(unlist(o))
           haps <- read.haplotypes(hen, ids)
           if(pop != "UK")
               write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos,
-                                                   chrom=c, pop=codes[pop], perm=perms[[codes[pop]]])
+                                                   chrom=c, pop=popcodes[pop], perm=perms[[popcodes[pop]]])
           else {
               for(UKreg in UKregions) {
                   inUK <- indivs.d$reg2 == "UK"
@@ -1653,16 +1747,16 @@ unique(unlist(o))
                   ids.reg <- ids[inreg]
                   hapfile <-
                       write.garrett.haplotype.and.id.files(haps.reg, ids.reg, pos=leg$pos,
-                                                           chrom=c, pop=codes[UKreg], perm=perms[[codes[UKreg]]])
+                                                           chrom=c, pop=popcodes[UKreg], perm=perms[[popcodes[UKreg]]])
               }
           }
       }
   }
 
-  write.table(cbind(codes, gsub(" ", "_", names(codes))),
+  write.table(cbind(popcodes, gsub(" ", "_", names(popcodes))),
                     file=g.codesfile(), quote=FALSE, row.names=FALSE, col.names=FALSE)
-  recipients <- codes[c(UKregions, "Ireland")]
-  donors <- codes[pops[! pops %in% c("UK","Ireland")]]
+  recipients <- popcodes[c(UKregions, "Ireland")]
+  donors <- popcodes[pops[! pops %in% c("UK","Ireland")]]
   cat(recipients, file=g.recipientfile(), sep="\n")
   cat(donors, file=g.donorfile(), sep="\n")
 
@@ -1673,7 +1767,7 @@ unique(unlist(o))
                   quote=FALSE, row.names=TRUE, col.names=FALSE)
   }
 
-  tab <- table(codes[as.character(indivs.d$reg)])
+  tab <- table(popcodes[as.character(indivs.d$reg)])
   for(recip in recipients)
       write.donorlist(recip, donors, tab[c(donors,recip)], ndonors)
 
@@ -1814,14 +1908,6 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 [4. application/octet-stream; BasqueCondOnEurope.recomrates]...
 #+end_example
 * STARTED Copying Analysis
-  :PROPERTIES:
-  :dir: ~/Work/Papers/PoBI/bench
-  :END:
-** Environment
-#+begin_src R :var pops=region-codes[,1] :var dir="POBIdan/ChromoPainterOUTPUT" :var chrom=22
-source("lib/libchromopainter.R")
-#+end_src
-
 ** Explanatory email from Garrett
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: UK-Europe haplotypes
@@ -1881,7 +1967,7 @@ Garrett
 *** Why self lower than others in *prop.out files?
 ** Donor proportions
 #+begin_src R
-  x <- chromopainter.read.donor.copy.counts(dir)
+  x <- chromopainter.read.donor.copy.counts(cpdir)
   stopifnot(names(x) %in% pops)
 
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
@@ -1918,30 +2004,54 @@ text(pos, labels=rownames(pos))
 
 ** Recipient proportions
 #+begin_src R
-  x <- chromopainter.read.recipient.copy.counts(dir)
+  x <- chromopainter.read.recipient.chunk.counts(cpdir)
   stopifnot(names(x) %in% pops)
-  z <- sapply(x, colnames)
-  stopifnot(z == z[,1])
 
   x <- lapply(x, as.matrix)
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
   mpx <- sapply(px, colMeans)
 #+end_src
 
-** Chunk Lengths
-
-#+begin_src R :var pops=region-codes[,1]
-  files <- list.files(path=file.path(dir, "PaintingSamples"),
-                      pattern="...Chrom22PaintingNeEstSamples\\.chunklengths\\.out",
-                      full.names=TRUE)
-  filepops <- substr(basename(files), 1, 3)
-  stopifnot(filepops %in% pops)
-  names(files) <- filepops
-  ## files <- sapply(files, gzfile, "r", simplify=FALSE)
-  x <- sapply(files, read.table, row.names=1, header=TRUE, simplify=FALSE)
-  x <- lapply(x, as.matrix)
-  mx <- sapply(x, colMeans)
+** Recipient chunk Lengths
+#+begin_src R
+  s <- chromopainter.read.recipient.chunk.lengths(cpdir)
+  stopifnot(names(s) %in% pops)
+  s <- lapply(s, as.matrix)
+  ms <- sapply(s, colMeans)
 #+end_src
+*** Analysis
+    :PROPERTIES:
+    :results:  output replace
+    :END:
+
+**** Scandinavian countries have longest mean chunk lengths
+#+begin_src R
+round(sort(rowMeans(ms)), 1)
+#+end_src
+
+#+results:
+:  ITA  POL  SPA  FRA  GER  BEL  DEN  SWE  NOR
+: 14.4 15.2 15.4 16.7 17.5 17.6 18.5 18.8 19.4
+
+**** But ORK is middle in order of NOR chunk lengths
+#+begin_src R
+round(sort(ms["NOR",]), 1)
+#+end_src
+
+#+results:
+:  IRE  SPE  HAM  WOR  CHE  COR  NEA  NWA  LEI  SUS  LAN  NFK  DOR  FOD  LIN  UNK  KEN  ORK  HER  DEV  NHA  CUM  DER  OXF  YOR  GLO  NOT  BNB  SUF  NPE  ANB  NIR
+: 18.5 18.8 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.2 19.3 19.3 19.3 19.3 19.4 19.4 19.4 19.4 19.5 19.5 19.5 19.5 19.5 19.6 19.6 19.6 19.7 19.8 19.8 19.9 20.5 20.6
+
+**** What about if Scandinavian countries are lumped?
+#+begin_src R
+SCA <- c("DEN","SWE","NOR")
+round(sort(colMeans(ms[SCA,])), 1)
+#+end_src
+
+#+results:
+:
+:  IRE  COR  NWA  NEA  FOD  LEI  NFK  HAM  DOR  KEN  NPE  YOR  WOR  SUF  ORK  DEV  HER  GLO  SPE  CUM  NOT  BNB  OXF  UNK  NHA  LIN  ANB  LAN  SUS  CHE  NIR  DER
+: 18.0 18.6 18.6 18.7 18.7 18.7 18.8 18.8 18.8 18.8 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 19.0 19.0 19.0 19.0 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.5 19.6
 
 * PCA
 #+begin_src sh
