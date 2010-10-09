@@ -12,6 +12,62 @@
 
 #+results:
 | (:session . *R-PoBI*) |
+** Region codes
+   #+results: region-codes
+   | Argyll and Bute     | ANB |
+   | Banff and Buchan    | BNB |
+   | Cheshire            | CHE |
+   | Cornwall            | COR |
+   | Cumbria             | CUM |
+   | Derbyshire          | DER |
+   | Devon               | DEV |
+   | Dorset              | DOR |
+   | Forest of Dean      | FOD |
+   | Gloucestershire     | GLO |
+   | Hampshire           | HAM |
+   | Herefordshire       | HER |
+   | Kent                | KEN |
+   | Lancashire          | LAN |
+   | Leicestershire      | LEI |
+   | Lincolnshire        | LIN |
+   | Unknown             | UNK |
+   | Norfolk             | NFK |
+   | North East          | NEA |
+   | North Pembrokeshire | NPE |
+   | North Wales         | NWA |
+   | Northamptonshire    | NHA |
+   | Northern Ireland    | NIR |
+   | Nottinghamshire     | NOT |
+   | Orkney              | ORK |
+   | Oxfordshire         | OXF |
+   | South Pembrokeshire | SPE |
+   | Suffolk             | SUF |
+   | Sussex              | SUS |
+   | Worcestershire      | WOR |
+   | Yorkshire           | YOR |
+   | Belgium             | BEL |
+   | Denmark             | DEN |
+   | France              | FRA |
+   | Germany             | GER |
+   | Ireland             | IRE |
+   | Italy               | ITA |
+   | Norway              | NOR |
+   | Poland              | POL |
+   | Spain               | SPA |
+   | Sweden              | SWE |
+
+*** Check
+    :PROPERTIES:
+    :eval: no
+    :END:
+
+   #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace
+      c(nreg=length(codes), nunique=length(unique(codes)))
+    #+end_src
+
+    #+results:
+    | nreg    | 0 |
+    | nunique | 0 |
 
 ** R environment
 *** Variables
@@ -196,57 +252,11 @@
    | Worcestershire      |   35 |
    | Yorkshire           |  202 |
 
-** Region codes
-   #+results: region-codes
-   | Argyll and Bute     | ANB |
-   | Banff and Buchan    | BNB |
-   | Cheshire            | CHE |
-   | Cornwall            | COR |
-   | Cumbria             | CUM |
-   | Derbyshire          | DER |
-   | Devon               | DEV |
-   | Dorset              | DOR |
-   | Forest of Dean      | FOD |
-   | Gloucestershire     | GLO |
-   | Hampshire           | HAM |
-   | Herefordshire       | HER |
-   | Kent                | KEN |
-   | Lancashire          | LAN |
-   | Leicestershire      | LEI |
-   | Lincolnshire        | LIN |
-   | Unknown             | UNK |
-   | Norfolk             | NFK |
-   | North East          | NEA |
-   | North Pembrokeshire | NPE |
-   | North Wales         | NWA |
-   | Northamptonshire    | NHA |
-   | Northern Ireland    | NIR |
-   | Nottinghamshire     | NOT |
-   | Orkney              | ORK |
-   | Oxfordshire         | OXF |
-   | South Pembrokeshire | SPE |
-   | Suffolk             | SUF |
-   | Sussex              | SUS |
-   | Worcestershire      | WOR |
-   | Yorkshire           | YOR |
-   | Belgium             | BEL |
-   | Denmark             | DEN |
-   | France              | FRA |
-   | Germany             | GER |
-   | Ireland             | IRE |
-   | Italy               | ITA |
-   | Norway              | NOR |
-   | Poland              | POL |
-   | Spain               | SPA |
-   | Sweden              | SWE |
-
-   #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace
-     c(nreg=length(codes), nunique=length(unique(codes)))
+   #+begin_src R :var new=sample-sizes-1 :var old=old-sample-sizes-1 :rownames yes :results value replace
+     new$old <- old[rownames(new),1]
+     new
    #+end_src
 
-   #+results:
-   | nreg    | 41 |
-   | nunique | 41 |
 
 * DONE MS exclusions
 #+begin_src R
