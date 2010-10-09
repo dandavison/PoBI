@@ -7,8 +7,8 @@ pobi.read.samplefile <- function(platform="illumina") {
     d
 }
 
-pobi.read.manifest <- function() {
-    d <- read.delim("data/POBI/sanger-sample-manifest.tsv", na.strings="", as.is=TRUE)
+pobi.read.manifest <- function(file="data/POBI/sanger-sample-manifest-gender-updated.csv", sep=",") {
+    d <- read.table(file, header=TRUE, sep=sep, na.strings="", as.is=TRUE)
     d <- d[c("SANGER.SAMPLE.ID", "GEOGRAPHICAL.REGION")]
     rownames(d) <- d[,1]
 
