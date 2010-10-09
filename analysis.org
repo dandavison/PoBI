@@ -258,6 +258,7 @@
    | Spain               |  205 |
    | Sweden              | 1212 |
 
+*** Old (wrong) sample sizes
    #+tblname: old-sample-sizes-1
    | Argyll and Bute     |   45 |
    | Banff and Buchan    |   67 |
@@ -349,8 +350,6 @@
 | Poland              |   58 |   58 |
 | Spain               |  205 |  205 |
 | Sweden              | 1212 | 1212 |
-
-
 
 
 * DONE MS exclusions
