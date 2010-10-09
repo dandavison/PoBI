@@ -351,7 +351,6 @@
 | Spain               |  205 |  205 |
 | Sweden              | 1212 | 1212 |
 
-
 * DONE MS exclusions
 #+begin_src R
   MSindivs <- read.table(ifile, header=TRUE, row.names=2)[-1]
@@ -1677,7 +1676,7 @@ unique(unlist(o))
 * STARTED Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
   ndonors <- 50
-  chroms <- c("18","20")
+  chroms <- c("18","20", "22")
   pops <- levels(indivs.d$reg2)
   stopifnot(pops[pops != "UK"] %in% names(popcodes))
   stopifnot(levels(indivs.d$reg) %in% names(popcodes))
@@ -1712,7 +1711,7 @@ unique(unlist(o))
       cat(rep("S", nrow(haps)), "\n", sep="", file=hapfile, append=TRUE)
       cat(rbind(haps, rep("\n", ncol(haps))), sep="", file=hapfile, append=TRUE)
       if(!file.exists(g.idfile(pop)))
-          cat(levels(ids)[ids], sep="\n", file=g.idfile(pop))
+          cat(ids, sep="\n", file=g.idfile(pop))
       else
           cat("File exists -- should check same contents\n")
   }
@@ -1733,7 +1732,7 @@ unique(unlist(o))
           ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
           hen <- stitchedfile(c, pop)
           leg <- read.chiamo.legend(hen)
-          stopifnot(identical(leg, leg0)) ## ??
+          ## stopifnot(identical(leg, leg0)) ## ??
           haps <- read.haplotypes(hen, ids)
           if(pop != "UK")
               write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos,
