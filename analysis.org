@@ -1980,13 +1980,15 @@ Garrett
   z <- sapply(px, colnames)
   stopifnot(z == z[,1], rownames(z) == filepops, colnames(z) == filepops)
 
-
   mpx <- sapply(px, colMeans)
+#+end_src
+*** Image plot
+#+begin_src R
   image(mpx, xaxt="n", yaxt="n")
   for(ax in 1:2)
       axis(ax, labels=filepops, at=seq(0, 1, length=npops))
-
 #+end_src
+
 *** PCA plot
     PCA of pairwise mean copying proportions between donor countries.
 #+begin_src R :file pca.png :results replace file
@@ -2024,7 +2026,7 @@ text(pos, labels=rownames(pos))
 
 **** Scandinavian countries have longest mean chunk lengths
 #+begin_src R
-round(sort(rowMeans(ms)), 1)
+  round(sort(rowMeans(ms)), 1)
 #+end_src
 
 #+results:
