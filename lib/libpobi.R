@@ -17,7 +17,7 @@ pobi.read.manifest <- function(file="data/POBI/sanger-sample-manifest-gender-upd
     z[z == "Nottinghampshire"] <- "Nottinghamshire"
     z[z == "Buckinghamshire"] <- "Oxfordshire"
     d[,"GEOGRAPHICAL.REGION"] <- z
-    
+
     d
 }
 
@@ -84,13 +84,13 @@ compare.haplotypes <- function(h1, h2, imgfile, twon=ncol(h1)) {
         xe <- x[,seq.int(2, twon,   2)]
         matrix(xo + xe, nrow(x), n, dimnames=list(rownames(x), colnames))
     }
-    
+
     ## L x 2n
     stopifnot(dim(h1) == dim(h1), twon %% 2 == 0)
     stopifnot(identical(dimnames(h1), dimnames(h2)))
     h1 <- h1[,1:twon] ; h2 <- h2[,1:twon]
     n <- twon / 2
-    
+
     ## Check genotypes are the same
     odds <- seq(1, twon-1, by=2)
     ids <- colnames(h1)[odds]
@@ -119,7 +119,7 @@ compare.haplotypes <- function(h1, h2, imgfile, twon=ncol(h1)) {
     hap.homo[,1,] <- hap.homo[,2,] <- homo
     dim(hap.homo) <- c(nrow(homo), 2*ncol(homo))
     h1[hap.homo] <- h2[hap.homo] <- NA
-    
+
     image(z=(h1[,odds] == h2[,odds]), x=c(0,seq(nrow(h1))), y=c(0,1:n), col=c("red","blue"))
     dev.off()
 }
@@ -179,7 +179,7 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
         stopifnot(leg1$ID_2[n1] == leg2$ID_2[nolap])
         stopifnot(leg1$ID_2[o1.idx] == leg2$ID_2[o2.idx])
         stopifnot(olap.nuse <= nolap)
-        
+
         ## Form column index vector matching haplotypes
         o1 <- haps1[o1.idx,,drop=FALSE]
         o2 <- haps2[o2.idx,,drop=FALSE]
@@ -197,7 +197,7 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
                 cat(msg, "\n")
                 warning(msg)
             }
-            
+
             p <- array(dim=c(2,2))
             w <- olap.nuse
             while(TRUE) {
@@ -221,7 +221,7 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
                 pair <- 2:1
 
             idx[ii + (1:2)] <- ii + pair
-            
+
             if(!(p11 >= 2*thresh || p12 >= 2*thresh)) {
                 msg <- paste("No clear resolution for individual", i)
                 cat(msg, "\n")
@@ -231,7 +231,7 @@ stitch.haplotypes <- function(files, ids, outfile, nolap, thresh=.9, olap.nuse=1
         list(h=haps2[-o2.idx,idx,drop=FALSE], l=leg2[-o2.idx,,drop=FALSE])
     }
 
-    
+
     hprev <- read.haplotypes(files[1], ids)
     lprev <- read.chiamo.legend(files[1])
     write.haplotypes(lprev, hprev, outfile, append=FALSE)
