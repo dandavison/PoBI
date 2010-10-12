@@ -1,6 +1,7 @@
 pobi.read.samplefile <- function(platform="illumina") {
     d <- wtccc2.read.samplefile("POBI", platform)
     manifest <- pobi.read.manifest()
+    stopifnot(d$ID_2 %in% rownames(manifest))
     reg <- manifest[d$ID_2,"GEOGRAPHICAL.REGION"]
     reg[is.na(reg)] <- "NA"
     d$reg <- factor(reg)
