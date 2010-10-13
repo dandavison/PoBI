@@ -1,5 +1,5 @@
 #+title: A genome-wide perspective on the history of the British Isles
-#+author: Dan, Chris, Garrett, Peter et al.
+#+author: Dan, Garrett, Peter et al.
 
 * Environment
 ** Org
@@ -61,8 +61,8 @@
     :END:
 
    #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace
-      c(nreg=length(codes), nunique=length(unique(codes)))
-    #+end_src
+     c(nreg=length(codes), nunique=length(unique(codes)))
+   #+end_src
 
     #+results:
     | nreg    | 0 |
@@ -165,6 +165,7 @@
   g.codesfile <- function()
       file.path("garrett", "pops", "codes")
 #+end_src
+
 *** Individuals data
 #+begin_src R
   indivs.d <- pobi.ms.read.samplefile()
@@ -178,6 +179,7 @@
   nwtccc2 <- nrow(indivs.d)
   stopifnot(nwtccc2 == 8267)
 #+end_src
+
 * Sample sizes
   :PROPERTIES:
   :results: value replace
@@ -736,11 +738,22 @@ a null model of isolation by distance.
 **** Allele frequency differentiation
 ***** Candidate SNPs
 **** Proxy-population admixture analyses
-#+begin_src emacs-lisp
-(org-babel-lob-ingest "lib/psi.org")
-#+end_src
+#+lob: lib/psi.org:admixmcmc()
 
-#+lob: admixmcmc
+From comment in R function:
+
+      ## xA[1:L,1:3] are counts of A allele at L SNPs in the two parental and the admixed populations
+      ## xa[1:L,1:3] are the same, for allele a
+      ## parameters of model are
+      ##   ancestral and parental allele frequencies p0, p1, p2
+      ##   drift parameters F1, F2, Gi := (1-Fi)/Fi
+      ##   parental pop allele frequencies pi ~ Beta( p0Gi, (1-p0)Gi )
+      ##   admixture proportion q
+      ##   obtain sample from posterior distribution of (p0, F1, F2, p1, p2, q)
+
+#+begin_src R
+
+#+end_src
 
 **** Unsupervised clustering/ordination
 ***** PCA: congruence of genetic and geographic maps
@@ -750,9 +763,10 @@ a null model of isolation by distance.
 **** IBD sharing HMM
      How many between-region relatives?
 *** Haplotype-based
-**** DONE Prepare data set for phasing
-***** Environment
-****** Create links to HapMap data files
+**** STARTED Phasing
+***** DONE Prepare data set for phasing
+****** Environment
+******* Create links to HapMap data files
 #+begin_src sh
   cd data/HM3
   for i in `seq 1 22` ; do
@@ -768,7 +782,7 @@ a null model of isolation by distance.
           `printf "%02d" $i`.map
   done
 #+end_src
-****** R data frames
+******* R data frames
 #+source: set-up-data-frames
 #+begin_src R
   dd <- list()
@@ -785,15 +799,15 @@ a null model of isolation by distance.
   df$winh <- mapply(function(h, w) sum(w$rs %in% h$rs), dd$h, dd$w, SIMPLIFY=FALSE)
 #+end_src
 
-***** DONE Restrict to intersection
+****** DONE Restrict to intersection
 We're going to flip WTCCC2 to match HapMap3
-****** Create merged SNP lists
+******* Create merged SNP lists
 #+source: create-isect
 #+begin_src R
   isect <- mapply(merge, dd$w, dd$h, MoreArgs=list(by="rs"), SIMPLIFY=FALSE)
   isect <- lapply(isect, function(i) i[order(i$pos.x),])
 #+end_src
-****** Create restricted data files
+******* Create restricted data files
 #+source: create-restricted-files
 #+begin_src R
   for(c in chroms) {
@@ -831,7 +845,7 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 
-****** Make pos file
+******* Make pos file
 #+begin_src R
   make.pos.files <- function() {
       dir.create("pos")
@@ -843,7 +857,7 @@ We're going to flip WTCCC2 to match HapMap3
   make.pos.files()
 #+end_src
 
-***** DONE Check restricted data dimensions
+****** DONE Check restricted data dimensions
 
 #+begin_src sh :colnames yes
   printf "chr\thapmap-L\twtccc2-L\thapmap-n\twtccc2-n\n"
@@ -884,8 +898,8 @@ We're going to flip WTCCC2 to match HapMap3
 |  21 |     7475 |     7475 |      410 |     8267 |
 |  22 |     7635 |     7635 |      410 |     8267 |
 
-***** Flip the WTCCC2 genotypes to match HapMap3 strand
-****** Construct flip indicator files
+****** Flip the WTCCC2 genotypes to match HapMap3 strand
+******* Construct flip indicator files
 #+source: create-flip-indicator-files
 #+begin_src R
   flipind <- function(df, file) {
@@ -902,7 +916,7 @@ We're going to flip WTCCC2 to match HapMap3
           cat(flipind(isect[[c]], flipinputfile(c, d)), file=flipindfile(c, d), sep="\n")
       }
 #+end_src
-****** Flip WTCCC2 PoBI+MS
+******* Flip WTCCC2 PoBI+MS
 #+source: create-flipped-files
 #+begin_src R
   for(c in rev(chroms)) {
@@ -921,7 +935,7 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 
-****** Create strand indicators
+******* Create strand indicators
 #+source: create-strand-indicators
 #+begin_src R
   for(c in chroms) {
@@ -938,8 +952,8 @@ We're going to flip WTCCC2 to match HapMap3
   }
 #+end_src
 
-***** DONE Check flipped data dimensions
-****** DONE Flip indicators
+****** DONE Check flipped data dimensions
+******* DONE Flip indicators
 #+begin_src sh
   wc -l flipind/*
 #+end_src
@@ -969,7 +983,7 @@ We're going to flip WTCCC2 to match HapMap3
 |   7635 | flipind/w-22.flip |
 | 498125 | total             |
 
-****** DONE Flipped data
+******* DONE Flipped data
 #+begin_src sh :colnames yes
   printf "chr\thapmap-L\twtccc2-L\thapmap-n\twtccc2-n\n"
   for i in `seq -w 1 22` ; do
@@ -1035,7 +1049,7 @@ Was:
 |  21 |     7475 |     7475 |      410 |     8267 |
 |  22 |     7635 |     7635 |      410 |     8267 |
 
-***** DONE Check allele frequencies
+****** DONE Check allele frequencies
 #+begin_src R
   freq <- lapply(chroms, list)
   for(c in rev(chroms)) {
@@ -1076,7 +1090,7 @@ Functions to compute frequency of allele 0
                                  i, i, rdatafile(c, "h"))),
                     quiet=TRUE, what=integer()))
 #+end_src
-***** Check
+****** Check
 #+tblname: rsids
 | SNP       |
 |-----------|
@@ -1150,7 +1164,7 @@ Functions to compute frequency of allele 0
 | rs#       | chrom |      pos | strand | build    | ref_allele | ref-allele_freq | ref-allele_count | other_allele | other-freq | other-allele_count |
 | rs2236639 | chr22 | 15452483 | +      | ncbi_b36 | A          |           0.084 |               19 | G            |      0.916 |                207 |
 
-***** SNP QC
+****** SNP QC
 #+begin_src sh
   qctool -g w-#.gen \
       -write-snp-excl-list \
@@ -1161,7 +1175,7 @@ Functions to compute frequency of allele 0
 
 #+end_src
 
-***** Babel script
+****** Babel script
 #+begin_src R :noweb yes
   <<set-variables()>>
   <<set-up-data-frames()>>
@@ -1173,9 +1187,6 @@ Functions to compute frequency of allele 0
 
 #+results:
 : 0
-
-**** TODO What's going on with chromosome 1 ??
-**** STARTED Phasing
 ***** Sample files and per-population exclude files
 #+begin_src R
   wtccc2.write.samplefile(indivs.d, file=indivsamplefile("w"))
@@ -1693,7 +1704,6 @@ unique(unlist(o))
 
 #+results:
 : 199
-
 ***** Stitch haplotypes
 #+begin_src R :var pops=sample-sizes[,0]
   chrom.nchunks <- c("18"=28, "20"=24) ##, "22"=14)
@@ -1710,15 +1720,9 @@ unique(unlist(o))
   }
 
 #+end_src
-
-**** Copying HMM
-     Use Affy data for individuals from the Iberian and "northern
-     German" areas of the POPRES map, and from Kiel.
-
-     - fit HMM to one UK individual at a time
-     - fit to unphased data?
-***** STARTED Copying Analysis
-****** Explanatory email from Garrett
+**** TODO What's going on with chromosome 1 ??
+**** STARTED Copying Analysis
+***** Explanatory email from Garrett
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: UK-Europe haplotypes
 Date: Thu, 30 Sep 2010 13:34:17 +0100
@@ -1770,12 +1774,12 @@ analyzed).
 Let me know if you have permission troubles as well, etc.
 Garrett
 
-****** Questions
-******* Should I be using *.regionchunkcounts.out for copying proportions?
-******* What's the num.regions column in *.regionchunkcounts.out?
-******* No difference between pops in *prop.out files
-******* Why self lower than others in *prop.out files?
-****** STARTED Create Garrett input files
+***** Questions
+****** Should I be using *.regionchunkcounts.out for copying proportions?
+****** What's the num.regions column in *.regionchunkcounts.out?
+****** No difference between pops in *prop.out files
+****** Why self lower than others in *prop.out files?
+***** STARTED Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
   ndonors <- 50
   chroms <- c("18","20", "22")
@@ -1884,7 +1888,7 @@ Garrett
 : 1: closing unused connection 3 (cut -d ' ' -f 2 < impute2/Poland/out/22/all.hen)
 : 2: closing unused connection 4 (cut -d ' ' -f 6- < impute2/Poland/out/22/all.hen)
 
-******* email
+****** email
 #+begin_example
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: this week
@@ -2009,9 +2013,9 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 
 [4. application/octet-stream; BasqueCondOnEurope.recomrates]...
 #+end_example
-****** Donor proportions
+***** Donor proportions
 #+begin_src R
-  x <- chromopainter.read.donor.copy.counts(cpdir)
+  x <- chromopainter.read.donor.copy.counts(cpdir, chrom)
   stopifnot(names(x) %in% pops)
 
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
@@ -2028,14 +2032,14 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 
   mpx <- sapply(px, colMeans)
 #+end_src
-******* Image plot
+****** Image plot
 #+begin_src R
   image(mpx, xaxt="n", yaxt="n")
   for(ax in 1:2)
       axis(ax, labels=filepops, at=seq(0, 1, length=npops))
 #+end_src
 
-******* PCA plot
+****** PCA plot
     PCA of pairwise mean copying proportions between donor countries.
 #+begin_src R :file pca.png :results replace file
 pc <- prcomp(mpx[-7,-7]) ## Get rid of Poland
@@ -2047,29 +2051,30 @@ text(pos, labels=rownames(pos))
 
 #+results:
 [[file:/home/dan/Work/Papers/PoBI/bench/pca.png]]
-****** Recipient proportions
+***** Recipient proportions
 #+begin_src R
-  x <- chromopainter.read.recipient.chunk.counts(cpdir)
-  stopifnot(names(x) %in% pops)
+  x <- chromopainter.read.recipient.chunk.counts(cpdir, chrom)
+  stopifnot(names(x) %in% c(pops,"UNK")) ## !!!!!!!!!!!!!!!!!!!
 
   x <- lapply(x, as.matrix)
   px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
   mpx <- sapply(px, colMeans)
+
 #+end_src
 
-****** Recipient chunk Lengths
+***** Recipient chunk Lengths
 #+begin_src R
-  s <- chromopainter.read.recipient.chunk.lengths(cpdir)
+  s <- chromopainter.read.recipient.chunk.lengths(cpdir, chrom)
   stopifnot(names(s) %in% pops)
   s <- lapply(s, as.matrix)
   ms <- sapply(s, colMeans)
 #+end_src
-******* Analysis
-       	:PROPERTIES:
-       	:results:  output replace
-       	:END:
+****** Analysis
+       :PROPERTIES:
+       :results:  output replace
+       :END:
 
-******** Scandinavian countries have longest mean chunk lengths
+******* Scandinavian countries have longest mean chunk lengths
 #+begin_src R
   round(sort(rowMeans(ms)), 1)
 #+end_src
@@ -2078,7 +2083,7 @@ text(pos, labels=rownames(pos))
 :  ITA  POL  SPA  FRA  GER  BEL  DEN  SWE  NOR
 : 14.4 15.2 15.4 16.7 17.5 17.6 18.5 18.8 19.4
 
-******** But ORK is middle in order of NOR chunk lengths
+******* But ORK is middle in order of NOR chunk lengths
 #+begin_src R
 round(sort(ms["NOR",]), 1)
 #+end_src
@@ -2087,7 +2092,7 @@ round(sort(ms["NOR",]), 1)
 :  IRE  SPE  HAM  WOR  CHE  COR  NEA  NWA  LEI  SUS  LAN  NFK  DOR  FOD  LIN  UNK  KEN  ORK  HER  DEV  NHA  CUM  DER  OXF  YOR  GLO  NOT  BNB  SUF  NPE  ANB  NIR
 : 18.5 18.8 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.2 19.3 19.3 19.3 19.3 19.4 19.4 19.4 19.4 19.5 19.5 19.5 19.5 19.5 19.6 19.6 19.6 19.7 19.8 19.8 19.9 20.5 20.6
 
-******** What about if Scandinavian countries are lumped?
+******* What about if Scandinavian countries are lumped?
 #+begin_src R
 SCA <- c("DEN","SWE","NOR")
 round(sort(colMeans(ms[SCA,])), 1)
@@ -2097,11 +2102,10 @@ round(sort(colMeans(ms[SCA,])), 1)
 :
 :  IRE  COR  NWA  NEA  FOD  LEI  NFK  HAM  DOR  KEN  NPE  YOR  WOR  SUF  ORK  DEV  HER  GLO  SPE  CUM  NOT  BNB  OXF  UNK  NHA  LIN  ANB  LAN  SUS  CHE  NIR  DER
 : 18.0 18.6 18.6 18.7 18.7 18.7 18.8 18.8 18.8 18.8 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 19.0 19.0 19.0 19.0 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.5 19.6
-***** Haploid unsupervised model?
-      Post-process to look at geographic origin of chomosomes in
-      individuals?
-***** Haplogroups
-
+**** Haploid unsupervised model?
+     Post-process to look at geographic origin of chomosomes in
+     individuals?
+**** Haplogroups
 * Synchronise
 #+begin_src sh :results output
   rsync -auvz --delete data/MS/ $cetus:data/MS/ && rsync -auvz --delete data/MS/ $oak:data/MS/

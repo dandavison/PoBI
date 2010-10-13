@@ -86,7 +86,7 @@ PoBI + MS cases (Illumina)
       | Iberia  |      211 |             |
       | France  |      536 |         357 |
       | Ireland |       73 |             |
-    
+
 *** DONE Sample information
 - Where are German individuals from?
 - Irish?
@@ -103,7 +103,7 @@ PoBI + MS cases (Illumina)
     :Effort:   32:00
     :allocate: DanChris
     :END:
-**** All individuals jointly phased using CEU+TSI 
+**** All individuals jointly phased using CEU+TSI
 
 *** STARTED Copying analyses
     SCHEDULED: <2010-04-19 Mon>--<2010-04-30 Fri>
@@ -116,7 +116,7 @@ PoBI + MS cases (Illumina)
     - Is there any evidence that Western Fringe populations have
       greater Iberian contribution?
     - Can we see that Norwegian/German contributions are recent?
-    
+
 *** TODO Unsupervised learning methods
 **** TODO PCA
      SCHEDULED: <2010-04-12 Mon>--<2010-04-16 Fri>
@@ -175,8 +175,8 @@ PoBI + MS cases (Illumina)
 
 * Resources					       :taskjuggler_resource:
 *** DanChris
-***** Dan 						       
-***** Chris 					       
+***** Dan
+***** Chris
 *** Chris
 *** Dan
 *** Peter
@@ -338,44 +338,9 @@ to match HapMap3 pops)
 | Burundi            |    1 |
 | Burma              |    1 |
 | Bangladesh         |    1 |
-	
+
 * Emails
 [[gnus:nnmairix%2Bmairix:#FB068F92BA9F2C45BEBCC3E7C1F32B260B93B7@exchange1.stats.ox.ac.uk][Email from Chris Spencer: FW: MS good news]]
-* Paper
-** Abstract
-The post-glacial history of human occupation of the British Isles has
-received a lot of attention from archeologists and historians during
-the last 250 years, and from geneticists during the last three
-decades. Here we address some of the key questions in this literature
-using genome-wide genetic variation data. Mixture modeling and
-principal component analyses recover genome-wide geographic clines
-that are consistent with continental patterns and thus consistent with
-a null model of isolation by distance.
-
-** Introduction
-** Results
-*** Genotype-based
-**** Allele frequency differentiation
-***** Candidate SNPs
-**** Proxy-population admixture analyses
-**** Unsupervised clustering/ordination
-***** PCA: congruence of genetic and geographic maps
-[[file:pobi-pca-scatter-zoom.png]]    
-***** Structure
-***** SFA
-**** IBD sharing HMM
-     How many between-region relatives?
-*** Haplotype-based
-**** Copying HMM
-     Use Affy data for individuals from the Iberian and "northern
-     German" areas of the POPRES map, and from Kiel.
-
-     - fit HMM to one UK individual at a time
-     - fit to unphased data?
-**** Haploid unsupervised model?
-     Post-process to look at geographic origin of chomosomes in
-     individuals?
-**** Haplogroups
 * Notes								   :noexport:
 *** Cristian Capelli
     papers
