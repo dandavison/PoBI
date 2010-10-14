@@ -56,11 +56,7 @@
    | Sweden              | SWE |
 
 *** Check
-    :PROPERTIES:
-    :eval: no
-    :END:
-
-   #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace
+   #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace :eval no
      c(nreg=length(codes), nunique=length(unique(codes)))
    #+end_src
 
@@ -71,6 +67,8 @@
 ** R environment
 *** Variables
 #+begin_src R :var region.codes=region-codes
+  source("lib/ded.R")
+  source("lib/redefinitions.R")
   source("lib/libpobi.R")
   source("lib/libwtccc2.R")
   source("lib/libchromopainter.R")
@@ -1722,7 +1720,15 @@ unique(unlist(o))
 #+end_src
 **** TODO What's going on with chromosome 1 ??
 **** STARTED Copying Analysis
-***** Explanatory email from Garrett
+***** R environment
+#+begin_src R
+  chroms <- as.character(c(18,20,22))
+  SCA <- c("DEN","SWE","NOR")
+#+end_src
+
+#+lob: lib/psi.org:qplots()
+***** emails
+****** From Garrett 1
 From: Garrett Hellenthal <ghellenthal@gmail.com>
 Subject: Re: UK-Europe haplotypes
 Date: Thu, 30 Sep 2010 13:34:17 +0100
@@ -1773,6 +1779,32 @@ analyzed).
 
 Let me know if you have permission troubles as well, etc.
 Garrett
+
+****** From Garrett 2
+From: Garrett Hellenthal <ghellenthal@gmail.com>
+Subject: Re: chimp copying figure
+Date: Wed, 13 Oct 2010 11:53:24 +0100
+To: Dan Davison <davison@stats.ox.ac.uk>
+
+Hi Dan -
+
+Just put the results for the donor pops in
+
+/data/oak/user/hellenth/POBIdan/ChromoPainterOUTPUT/LeaveOneOutNeResults/
+
+and for the recipients in
+
+/data/oak/user/hellenth/POBIdan/ChromoPainterOUTPUT/PaintingNeResults/
+
+Again only chrom 22 has "*samples.out" files, for the recipients only. The
+rest all have "chunkcounts.out" files, which contain the expected number of
+chunks copied by each ind from each donor pop (which includes "Self" for the
+donor pop runs).
+
+Runs that still haven't finished:
+CUM - 18,20,22
+NEA - 18,20
+YOR - 18,20
 
 ***** Questions
 ****** Should I be using *.regionchunkcounts.out for copying proportions?
@@ -2013,7 +2045,90 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 
 [4. application/octet-stream; BasqueCondOnEurope.recomrates]...
 #+end_example
-***** Donor proportions
+***** Recipient analysis
+#+begin_src R
+  total.length <- counts <- mean.lengths <- list()
+  
+  
+  for(c in chroms) {
+      counts[[c]] <- chromopainter.read.recipient.chunk.counts(c, dir=cpdir, exclude=exclude)
+      total.lengths[[c]] <- chromopainter.read.recipient.chunk.lengths(c, dir=cpdir, exclude=exclude)
+      mean.lengths[[c]] <- mapply("/", total.lengths[[c]], counts[[c]])
+  }
+  
+  stopifnot(unlist(lapply(counts, names)) %in% pops)
+  stopifnot(unlist(lapply(total.length, names)) %in% pops)
+  
+  
+  
+  x <- px <- px1 <- mpx <- list()
+  px[[c]] <- mapply("/", x[[c]], lapply(x[[c]], rowSums), SIMPLIFY=FALSE)
+  px1[[c]] <- do.call("rbind", px[[c]])
+  mpx[[c]] <- sapply(px[[c]], colMeans)
+  
+  
+  group.pops <- function(x, pops) {
+      inn <- colnames(x) %in% pops
+      structure(cbind(rowSums(x[,inn,drop=FALSE]), rowSums(x[,!inn,drop=FALSE])),
+                dimnames=list(rownames(x), c("in","out")))
+  }
+  
+  for(c in chroms) {
+      labs <- sapply(px[[c]], nrow)
+      labs <- factor(rep(names(labs), labs))
+      ## No donor pooling
+      pdf(sprintf("img/qplot-%s.pdf", c), width=20, height=5)
+      psi.qplot(px1[[c]], labels=labs)
+      dev.off()
+      ## DGNS pooling
+      ingroup <- c("DEN","GER","NOR","SWE")
+      pdf(sprintf("img/qplot-%s-DGNS.pdf", c), width=20, height=5)
+      q <- group.pops(px1[[c]], ingroup)
+      psi.qplot(q, labels=labs)
+      dev.off()
+  }
+#+end_src
+
+****** Recipient chunk Lengths
+#+begin_src R
+  s <- chromopainter.read.recipient.chunk.lengths(cpdir, chrom)
+  stopifnot(names(s) %in% pops)
+  s <- lapply(s, as.matrix)
+  ms <- sapply(s, colMeans)
+#+end_src
+******* Analysis
+       	:PROPERTIES:
+       	:results:  output replace
+       	:END:
+
+******** Scandinavian countries have longest mean chunk lengths
+#+begin_src R
+  round(sort(rowMeans(ms)), 1)
+#+end_src
+
+#+results:
+:  ITA  POL  SPA  FRA  GER  BEL  DEN  SWE  NOR
+: 14.4 15.2 15.4 16.7 17.5 17.6 18.5 18.8 19.4
+
+******** But ORK is middle in order of NOR chunk lengths
+#+begin_src R
+round(sort(ms["NOR",]), 1)
+#+end_src
+
+#+results:
+:  IRE  SPE  HAM  WOR  CHE  COR  NEA  NWA  LEI  SUS  LAN  NFK  DOR  FOD  LIN  UNK  KEN  ORK  HER  DEV  NHA  CUM  DER  OXF  YOR  GLO  NOT  BNB  SUF  NPE  ANB  NIR
+: 18.5 18.8 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.2 19.3 19.3 19.3 19.3 19.4 19.4 19.4 19.4 19.5 19.5 19.5 19.5 19.5 19.6 19.6 19.6 19.7 19.8 19.8 19.9 20.5 20.6
+
+******** What about if Scandinavian countries are lumped?
+#+begin_src R
+round(sort(colMeans(ms[SCA,])), 1)
+#+end_src
+
+#+results:
+:
+:  IRE  COR  NWA  NEA  FOD  LEI  NFK  HAM  DOR  KEN  NPE  YOR  WOR  SUF  ORK  DEV  HER  GLO  SPE  CUM  NOT  BNB  OXF  UNK  NHA  LIN  ANB  LAN  SUS  CHE  NIR  DER
+: 18.0 18.6 18.6 18.7 18.7 18.7 18.8 18.8 18.8 18.8 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 19.0 19.0 19.0 19.0 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.5 19.6
+***** Donor analysis
 #+begin_src R
   x <- chromopainter.read.donor.copy.counts(cpdir, chrom)
   stopifnot(names(x) %in% pops)
@@ -2051,57 +2166,6 @@ text(pos, labels=rownames(pos))
 
 #+results:
 [[file:/home/dan/Work/Papers/PoBI/bench/pca.png]]
-***** Recipient proportions
-#+begin_src R
-  x <- chromopainter.read.recipient.chunk.counts(cpdir, chrom)
-  stopifnot(names(x) %in% c(pops,"UNK")) ## !!!!!!!!!!!!!!!!!!!
-
-  x <- lapply(x, as.matrix)
-  px <- mapply("/", x, lapply(x, rowSums), SIMPLIFY=FALSE)
-  mpx <- sapply(px, colMeans)
-
-#+end_src
-
-***** Recipient chunk Lengths
-#+begin_src R
-  s <- chromopainter.read.recipient.chunk.lengths(cpdir, chrom)
-  stopifnot(names(s) %in% pops)
-  s <- lapply(s, as.matrix)
-  ms <- sapply(s, colMeans)
-#+end_src
-****** Analysis
-       :PROPERTIES:
-       :results:  output replace
-       :END:
-
-******* Scandinavian countries have longest mean chunk lengths
-#+begin_src R
-  round(sort(rowMeans(ms)), 1)
-#+end_src
-
-#+results:
-:  ITA  POL  SPA  FRA  GER  BEL  DEN  SWE  NOR
-: 14.4 15.2 15.4 16.7 17.5 17.6 18.5 18.8 19.4
-
-******* But ORK is middle in order of NOR chunk lengths
-#+begin_src R
-round(sort(ms["NOR",]), 1)
-#+end_src
-
-#+results:
-:  IRE  SPE  HAM  WOR  CHE  COR  NEA  NWA  LEI  SUS  LAN  NFK  DOR  FOD  LIN  UNK  KEN  ORK  HER  DEV  NHA  CUM  DER  OXF  YOR  GLO  NOT  BNB  SUF  NPE  ANB  NIR
-: 18.5 18.8 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.2 19.3 19.3 19.3 19.3 19.4 19.4 19.4 19.4 19.5 19.5 19.5 19.5 19.5 19.6 19.6 19.6 19.7 19.8 19.8 19.9 20.5 20.6
-
-******* What about if Scandinavian countries are lumped?
-#+begin_src R
-SCA <- c("DEN","SWE","NOR")
-round(sort(colMeans(ms[SCA,])), 1)
-#+end_src
-
-#+results:
-:
-:  IRE  COR  NWA  NEA  FOD  LEI  NFK  HAM  DOR  KEN  NPE  YOR  WOR  SUF  ORK  DEV  HER  GLO  SPE  CUM  NOT  BNB  OXF  UNK  NHA  LIN  ANB  LAN  SUS  CHE  NIR  DER
-: 18.0 18.6 18.6 18.7 18.7 18.7 18.8 18.8 18.8 18.8 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 18.9 19.0 19.0 19.0 19.0 19.0 19.0 19.0 19.1 19.1 19.1 19.2 19.5 19.6
 **** Haploid unsupervised model?
      Post-process to look at geographic origin of chomosomes in
      individuals?
