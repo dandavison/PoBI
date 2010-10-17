@@ -14,46 +14,46 @@
 | (:session . *R-PoBI*) |
 ** Region codes
    #+results: region-codes
+   | Orkney              | ORK |
    | Argyll and Bute     | ANB |
    | Banff and Buchan    | BNB |
-   | Cheshire            | CHE |
-   | Cornwall            | COR |
    | Cumbria             | CUM |
    | Derbyshire          | DER |
-   | Devon               | DEV |
-   | Dorset              | DOR |
+   | Cheshire            | CHE |
+   | Yorkshire           | YOR |
+   | Northern Ireland    | NIR |
+   | North East          | NEA |
+   | Lancashire          | LAN |
+   | Herefordshire       | HER |
+   | North Pembrokeshire | NPE |
+   | South Pembrokeshire | SPE |
+   | North Wales         | NWA |
+   | Lincolnshire        | LIN |
+   | Nottinghamshire     | NOT |
+   | Leicestershire      | LEI |
+   | Northamptonshire    | NHA |
+   | Oxfordshire         | OXF |
+   | Worcestershire      | WOR |
    | Forest of Dean      | FOD |
    | Gloucestershire     | GLO |
-   | Hampshire           | HAM |
-   | Herefordshire       | HER |
-   | Kent                | KEN |
-   | Lancashire          | LAN |
-   | Leicestershire      | LEI |
-   | Lincolnshire        | LIN |
+   | Dorset              | DOR |
+   | Devon               | DEV |
+   | Cornwall            | COR |
    | Norfolk             | NFK |
-   | North East          | NEA |
-   | North Pembrokeshire | NPE |
-   | North Wales         | NWA |
-   | Northamptonshire    | NHA |
-   | Northern Ireland    | NIR |
-   | Nottinghamshire     | NOT |
-   | Orkney              | ORK |
-   | Oxfordshire         | OXF |
-   | South Pembrokeshire | SPE |
    | Suffolk             | SUF |
+   | Hampshire           | HAM |
+   | Kent                | KEN |
    | Sussex              | SUS |
-   | Worcestershire      | WOR |
-   | Yorkshire           | YOR |
-   | Belgium             | BEL |
+   | Norway              | NOR |
+   | Sweden              | SWE |
    | Denmark             | DEN |
-   | France              | FRA |
    | Germany             | GER |
+   | Poland              | POL |
+   | Belgium             | BEL |
+   | France              | FRA |
    | Ireland             | IRE |
    | Italy               | ITA |
-   | Norway              | NOR |
-   | Poland              | POL |
    | Spain               | SPA |
-   | Sweden              | SWE |
 
 *** Check
    #+begin_src R :var codes=region-codes[,1] :rownames yes :results value replace :eval no
@@ -718,7 +718,7 @@ wc -l *.ids
       --cohorts 'MS POBI' --exclude ../MS/exclusions.all \
       --outfile MS-POBI-pca-
 #+end_src
-
+      
 * Paper
 ** Abstract
 The post-glacial history of human occupation of the British Isles has
@@ -1720,6 +1720,10 @@ unique(unlist(o))
 #+end_src
 **** TODO What's going on with chromosome 1 ??
 **** STARTED Copying Analysis
+     :PROPERTIES:
+     :visibility: content
+     :END:
+
 ***** R environment
 #+begin_src R
   chroms <- as.character(c(18,20,22))
@@ -2047,24 +2051,28 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 #+end_example
 ***** Recipient analysis
 #+begin_src R
-  total.length <- counts <- mean.lengths <- list()
-  
+  total.lengths <- counts <- mean.lengths <- list()
+  exclude <- NULL
   
   for(c in chroms) {
-      counts[[c]] <- chromopainter.read.recipient.chunk.counts(c, dir=cpdir, exclude=exclude)
-      total.lengths[[c]] <- chromopainter.read.recipient.chunk.lengths(c, dir=cpdir, exclude=exclude)
-      mean.lengths[[c]] <- mapply("/", total.lengths[[c]], counts[[c]])
+      counts[[c]] <- cp.read.recipient.chunk.counts(c, dir=cpdir, exclude=exclude)
+      total.lengths[[c]] <- cp.read.recipient.chunk.lengths(c, dir=cpdir, exclude=exclude)
   }
   
   stopifnot(unlist(lapply(counts, names)) %in% pops)
   stopifnot(unlist(lapply(total.length, names)) %in% pops)
+  cM <- lapply(total.lengths, function(l) unlist(lapply(l, rowSums)))
+  cM <- sapply(cM, function(x) unique(round(x, 1)))
+  stopifnot(length(cM) == length(chroms))
+  print(cM)
   
-  
-  
-  x <- px <- px1 <- mpx <- list()
-  px[[c]] <- mapply("/", x[[c]], lapply(x[[c]], rowSums), SIMPLIFY=FALSE)
-  px1[[c]] <- do.call("rbind", px[[c]])
-  mpx[[c]] <- sapply(px[[c]], colMeans)
+  total.lengths1 <- counts1 <- mean.lengths1 <- list()
+  for(c in chroms) {
+      mean.lengths[[c]] <- mapply("/", total.lengths[[c]], counts[[c]])
+      total.lengths1[[c]] <- do.call("rbind", total.lengths[[c]])
+      mean.lengths1[[c]] <- do.call("rbind", mean.lengths[[c]])
+      counts1[[c]] <- do.call("rbind", counts[[c]])
+  }
   
   
   group.pops <- function(x, pops) {
@@ -2074,19 +2082,30 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
   }
   
   for(c in chroms) {
-      labs <- sapply(px[[c]], nrow)
+      labs <- sapply(counts[[c]], nrow)
       labs <- factor(rep(names(labs), labs))
       ## No donor pooling
-      pdf(sprintf("img/qplot-%s.pdf", c), width=20, height=5)
-      psi.qplot(px1[[c]], labels=labs)
+      pdf(sprintf("img/qplot-meanlengths-%s.pdf", c), width=20, height=5)
+      psi.qplot(mean.lengths1[[c]], labels=labs)
+      dev.off()
+      pdf(sprintf("img/qplot-totallength-%s.pdf", c), width=20, height=5)
+      psi.qplot(total.lengths1[[c]], labels=labs)
+      dev.off()
+      pdf(sprintf("img/qplot-counts-%s.pdf", c), width=20, height=5)
+      psi.qplot(counts1[[c]], labels=labs)
       dev.off()
       ## DGNS pooling
-      ingroup <- c("DEN","GER","NOR","SWE")
-      pdf(sprintf("img/qplot-%s-DGNS.pdf", c), width=20, height=5)
-      q <- group.pops(px1[[c]], ingroup)
-      psi.qplot(q, labels=labs)
-      dev.off()
+      ## ingroup <- c("DEN","GER","NOR","SWE")
+      ## pdf(sprintf("img/qplot-%s-DGNS.pdf", c), width=20, height=5)
+      ## q <- group.pops(px1[[c]], ingroup)
+      ## psi.qplot(q, labels=labs)
+      ## dev.off()
   }
+  
+  
+  x <- px <- px1 <- mpx <- list()
+  px[[c]] <- mapply("/", x[[c]], lapply(x[[c]], rowSums), SIMPLIFY=FALSE)
+  mpx[[c]] <- sapply(px[[c]], colMeans)
 #+end_src
 
 ****** Recipient chunk Lengths
@@ -2166,6 +2185,198 @@ text(pos, labels=rownames(pos))
 
 #+results:
 [[file:/home/dan/Work/Papers/PoBI/bench/pca.png]]
+***** After linear model
+#+begin_src R
+  p <- list()
+  for(fitind in c(TRUE,FALSE)) {
+      for(grouped in c(TRUE,FALSE)) {
+          for(averaged in c(TRUE,FALSE)) {
+  
+              files <- list.files("POBIdan-orig/ChromoPainterOUTPUT/propsanddates",
+                                  pattern=sprintf("[A-Z][A-Z][A-Z]Props%s.out", if(fitind) "FitInd" else ""),
+                                  full.names=TRUE)
+  
+              pdf.file <- sprintf("img/props/props%s%s%s.pdf",
+                                  if(fitind) ".FitInd" else "",
+                                  if(grouped) ".Grouped" else "",
+                                  if(averaged) ".Averaged" else "")
+  
+              names(files) <- substr(basename(files), 1, 3)
+              props <- list()
+              for(reg in names(files)) {
+                  load(files[reg])
+                  props[[reg]] <- newresults[rownames(newresults) == reg,]
+              }
+              z <- sapply(props, colnames)
+              stopifnot(z[-nrow(z),] == z[-nrow(z),1])
+  
+              props1 <- do.call("rbind", props)
+              ## Remove self-copying column
+              props1 <- props1[,-ncol(props1)]
+              props1[props1 < 0] <- 0
+  
+              geo.donors <- geo.recips <- popcodes
+              if(grouped) {
+                  groups <- c(SPA="MED",ITA="MED",FRA="FRA",BEL="FRA",POL="POL",GER="GER",DEN="SCA",SWE="SCA",NOR="SCA")
+                  ## Remove POL and GER
+                  bad <- colnames(props1) %in% c("POL","GER")
+                  props1 <- props1[,!bad]
+                  ## Regroup
+                  props1 <- group.sums(props1, labels=factor(groups[!groups %in% c("POL","GER")]), na.rm=TRUE)
+                  geo.donors <- c("SCA","FRA","MED")
+              }
+  
+              ## Force recip individual copying proportions to sum to 1
+              props1 <- props1 / rowSums(props1)
+  
+              ## Reorder in vaguely North-South order
+              donors <- colnames(props1)
+              recips <- rownames(props1)
+              donor.order <- order(match(donors, geo.donors), decreasing=TRUE)
+              recip.order <- order(match(unique(recips), geo.recips), decreasing=TRUE)
+              props1r <- do.call("rbind", split.data.frame(props1, recips)[recip.order])[,donor.order]
+              donors <- colnames(props1r)
+              recips <- rownames(props1r)
+  
+              if(averaged) {
+                  props1r <- t(sapply(split.data.frame(props1r, factor(recips, levels=unique(recips))),
+                                      colMeans, na.rm=TRUE))
+                  recips <- unique(recips)
+                  dimnames(props1r) <- list(recips, donors)
+              }
+  
+  
+              ## Image plot
+              donor.midpoints <- seq(0, 1, length=length(donors))
+              if(averaged) {
+                  recips.midpoints <- seq(0, 1, length=length(recips))
+                  recips.Rboundaries <- recips.midpoints + diff(recips.midpoints)[1]/2
+              } else {
+                  warning("I think these are not quite correct")
+                  recips.Rboundaries <- cumsum(table(factor(recips, levels=unique(recips))) / length(recips))
+                  recips.Lboundaries <- c(0, recips.Rboundaries[-length(unique(recips))])
+                  recips.midpoints <- (recips.Rboundaries + recips.Lboundaries) / 2
+              }
+              pdf(pdf.file, width=30, height=10)
+              image(props1r, xaxt="n", yaxt="n")
+              abline(v=c(0,recips.Rboundaries), lwd=3)
+              axis(side=1, at=recips.midpoints, labels=unique(recips), las=2, cex.lab=2)
+              axis(side=2, at=donor.midpoints, labels=donors, cex.lab=2)
+              dev.off()
+  
+              p[[basename(pdf.file)]] <- props1r
+          }
+      }
+  }
+#+end_src
+****** Email to Garrett
+Hi Garrett,
+
+I've replotted your linear model results so that all the recipients are
+shown on a single plot:
+
+"Averaged" means the mean copying proportion for the recipient is
+plotted rather than each individual.
+
+"Grouped" means I've got rid of Poland and Germany and lumped them
+  arbitrarily into
+  Mediterranean, France/Central and Scandinavian groups:
+  SPA   ITA   FRA   BEL   DEN   SWE   NOR 
+ "MED" "MED" "FRA" "FRA"  "SCA" "SCA" "SCA" 
+
+
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.Grouped.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.Grouped.Averaged.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.FitInd.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.FitInd.Grouped.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.FitInd.Grouped.Averaged.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.FitInd.Averaged.pdf
+http://www.stats.ox.ac.uk/~davison/pobi/copying/props.Averaged.pdf
+
+
+- We /do/ see most Norwegian copying in Orkney, as one might
+  expect (props.pdf)
+- The top copiers of Scandinavia (Denmark, Sweden, Norway) are
+  Lancashire, North Pembrokeshire, Orkney, Yorkshire
+
+****** Scandinavian copying proportions
+#+begin_src R :rownames yes :results value replace 
+sort(p$props.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
+#+end_src
+******* 
+#+results:
+| LAN | 0.472464684216484 |
+| NPE | 0.457006785684227 |
+| ORK | 0.427165728350506 |
+| YOR | 0.397726420456432 |
+| HER | 0.395340884744769 |
+| LIN | 0.382241629126448 |
+| KEN | 0.365751938816995 |
+| HAM |  0.35836272812637 |
+| NOT | 0.307306043362477 |
+| SUF | 0.272199061678289 |
+| IRE | 0.269074209041066 |
+| CHE | 0.264813669050678 |
+| DOR | 0.259587142840839 |
+| OXF | 0.246191683050788 |
+| BNB | 0.239383068365199 |
+| CUM | 0.233348670965833 |
+| NEA | 0.217491667612771 |
+| NIR | 0.217488926643555 |
+| LEI | 0.215782351585074 |
+| FOD |  0.21364204238557 |
+| NFK |  0.20584344769352 |
+| WOR | 0.195550451666031 |
+| DEV | 0.192735372751888 |
+| NWA | 0.182882781304951 |
+| SPE | 0.177197078795617 |
+| SUS | 0.161617095304679 |
+| GLO | 0.151130971540175 |
+| DER | 0.149369298106595 |
+| ANB | 0.141545910358686 |
+| COR | 0.140848579852128 |
+| NHA |                 0 |
+
+#+begin_src R :rownames yes :results value replace 
+sort(p$props.FitInd.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
+#+end_src
+
+#+results:
+| LAN | 0.498462852664142 |
+| ORK | 0.469485019049479 |
+| CHE | 0.409366948297966 |
+| YOR | 0.396371842294625 |
+| IRE | 0.385967961870147 |
+| LEI | 0.375487822125497 |
+| CUM | 0.369343776428067 |
+| NIR | 0.364574894326041 |
+| LIN | 0.355829153159466 |
+| SUF | 0.355397031815175 |
+| HAM |  0.35106800385725 |
+| ANB | 0.350680580865055 |
+| NOT | 0.350073573639417 |
+| NEA | 0.348234966095933 |
+| NFK | 0.344485423183319 |
+| FOD | 0.344125834393693 |
+| BNB | 0.342584053073702 |
+| KEN | 0.342398856740464 |
+| HER | 0.339830648396111 |
+| NPE | 0.331809626012071 |
+| COR | 0.319208265649112 |
+| WOR | 0.316538361824733 |
+| DEV | 0.315587642300626 |
+| DER | 0.314211475282733 |
+| OXF | 0.303523007277259 |
+| GLO | 0.287753604738464 |
+| DOR | 0.273860099869927 |
+| SUS | 0.245946738879608 |
+| NWA | 0.241778018066776 |
+| SPE | 0.237751742078069 |
+| NHA | 0.212554346129616 |
+
+
+
 **** Haploid unsupervised model?
      Post-process to look at geographic origin of chomosomes in
      individuals?
