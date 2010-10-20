@@ -1788,7 +1788,7 @@ number of SNPs.
 
 ***** R environment
 #+begin_src R
-  chroms <- as.character(c(18,20,22))
+  chroms <- as.character(c(18,20)) ##,22))
   SCA <- c("DEN","SWE","NOR")
 #+end_src
 
@@ -1880,12 +1880,12 @@ YOR - 18,20
 ***** STARTED Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
   ndonors <- 50
-  chroms <- c("18","20", "22")
+  chroms <- c("18","20") ##, "22")
   pops <- levels(indivs.d$reg2)
   stopifnot(pops[pops != "UK"] %in% names(popcodes))
   stopifnot(levels(indivs.d$reg) %in% names(popcodes))
   UKregions <- unique(as.character(indivs.d$reg[indivs.d$reg2 == "UK"]))
-
+  
   write.garrett.recomb.file <- function(chrom, leg) {
       op <- options() ; on.exit(options(op))
       options(scipen=100, digits=15)
@@ -1895,36 +1895,37 @@ YOR - 18,20
       write.table(cbind(start.pos=leg$pos, recom.rate.perbp=r*1e-8),
                   file=g.recombfile(chrom), quote=FALSE, row.names=FALSE, col.names=TRUE)
   }
-
+  
   indiv2hap.idx <- function(idx) c(rbind(2*idx - 1, 2*idx))
-
+  
   write.garrett.haplotype.and.id.files <- function(haps, ids, pos, chrom, pop, perm) {
-      ## stopifnot(ncol(haps) == 2*length(ids))
-      ## stopifnot(nrow(haps) == length(pos))
-      ## hap.perm <- indiv2hap.idx(perm)
-      ## haps <- haps[,hap.perm]
+      stopifnot(ncol(haps) == 2*length(ids))
+      stopifnot(nrow(haps) == length(pos))
+      hap.perm <- indiv2hap.idx(perm)
+      haps <- haps[,hap.perm]
       ids <- ids[perm]
       ## num.inds
       ## num.snps
       ## P positions.vector
       ## SSSSSSSS (repeated num.snps times, though really you can have anything here)
-      ## hapfile <- g.hapfile(pop, chrom)
-      ## cat(length(ids), "\n", file=hapfile)
-      ## cat(nrow(haps), "\n", file=hapfile, append=TRUE)
-      ## cat("P", pos, sep=" ", file=hapfile, append=TRUE) ; cat("\n", file=hapfile, append=TRUE)
-      ## cat(rep("S", nrow(haps)), "\n", sep="", file=hapfile, append=TRUE)
-      ## cat(rbind(haps, rep("\n", ncol(haps))), sep="", file=hapfile, append=TRUE)
+      hapfile <- g.hapfile(pop, chrom)
+      cat(length(ids), "\n", file=hapfile)
+      cat(nrow(haps), "\n", file=hapfile, append=TRUE)
+      cat("P", pos, sep=" ", file=hapfile, append=TRUE) ; cat("\n", file=hapfile, append=TRUE)
+      cat(rep("S", nrow(haps)), "\n", sep="", file=hapfile, append=TRUE)
+      cat(rbind(haps, rep("\n", ncol(haps))), sep="", file=hapfile, append=TRUE)
       if(!file.exists(g.idfile(pop)))
           cat(ids, sep="\n", file=g.idfile(pop))
       else
           cat("File exists -- should check same contents\n")
   }
-
+  
   set.seed(14011978)
   perms <- sapply(levels(indivs.d$reg), function(reg) sample(1:sum(indivs.d$reg == reg)),
                   simplify=FALSE)
   names(perms) <- popcodes[names(perms)]
-
+  stopifnot(identical(perms, read.object("perms.rda")))
+  
   for(c in chroms) {
       leg0 <- read.chiamo.legend(stitchedfile(c, "Norway"))
       if(!file.exists(g.legfile(c)))
@@ -1934,10 +1935,11 @@ YOR - 18,20
           write.garrett.recomb.file(c, leg0)
       for(pop in pops) {
           ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
-          ## hen <- stitchedfile(c, pop)
+          hen <- stitchedfile(c, pop)
           leg <- read.chiamo.legend(hen)
           ## stopifnot(identical(leg, leg0)) ## ??
-          haps <- NULL ## read.haplotypes(hen, ids)
+          haps <- read.haplotypes(hen, ids)
+  
           if(pop != "UK")
               write.garrett.haplotype.and.id.files(haps, ids, pos=leg$pos,
                                                    chrom=c, pop=popcodes[pop], perm=perms[[popcodes[pop]]])
@@ -1945,37 +1947,35 @@ YOR - 18,20
               for(UKreg in UKregions) {
                   inUK <- indivs.d$reg2 == "UK"
                   inreg <- indivs.d[inUK,"reg"] == UKreg
-                  haps.reg <- NULL ## haps[,rep(inreg, each=2),drop=FALSE]
+                  haps.reg <- haps[,rep(inreg, each=2),drop=FALSE]
                   ids.reg <- ids[inreg]
                   hapfile <-
                       write.garrett.haplotype.and.id.files(haps.reg, ids.reg, pos=leg$pos,
                                                            chrom=c, pop=popcodes[UKreg], perm=perms[[popcodes[UKreg]]])
               }
           }
+  
       }
-  }
-
+   }
+  
   write.table(cbind(popcodes, gsub(" ", "_", names(popcodes))),
                     file=g.codesfile(), quote=FALSE, row.names=FALSE, col.names=FALSE)
   recipients <- popcodes[c(UKregions, "Ireland")]
   donors <- popcodes[pops[! pops %in% c("UK","Ireland")]]
   cat(recipients, file=g.recipientfile(), sep="\n")
-
+  
   cat(donors, file=g.donorfile(), sep="\n")
-
+  
   write.donorlist <- function(recipient, donors, n, ndonors) {
       stopifnot(names(n) == c(donors, recipient))
       n[donors] <- ndonors
       write.table(n, file=g.donorlistfile(recipient),
                   quote=FALSE, row.names=TRUE, col.names=FALSE)
   }
-
+  
   tab <- table(popcodes[as.character(indivs.d$reg)])
   for(recip in recipients)
       write.donorlist(recip, donors, tab[c(donors,recip)], ndonors)
-
-
-
 #+end_src
 
 #+results:
@@ -2122,7 +2122,7 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
   }
   
   stopifnot(unlist(lapply(counts, names)) %in% pops)
-  stopifnot(unlist(lapply(total.length, names)) %in% pops)
+  stopifnot(unlist(lapply(total.lengths, names)) %in% pops)
   cM <- lapply(total.lengths, function(l) unlist(lapply(l, rowSums)))
   cM <- sapply(cM, function(x) unique(round(x, 1)))
   stopifnot(length(cM) == length(chroms))
@@ -2147,13 +2147,13 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
       labs <- sapply(counts[[c]], nrow)
       labs <- factor(rep(names(labs), labs))
       ## No donor pooling
-      pdf(sprintf("img/qplot-meanlengths-%s.pdf", c), width=20, height=5)
+      pdf(sprintf("img/qplots/qplot-meanlengths-%s.pdf", c), width=20, height=5)
       psi.qplot(mean.lengths1[[c]], labels=labs)
       dev.off()
-      pdf(sprintf("img/qplot-totallength-%s.pdf", c), width=20, height=5)
+      pdf(sprintf("img/qplots/qplot-totallength-%s.pdf", c), width=20, height=5)
       psi.qplot(total.lengths1[[c]], labels=labs)
       dev.off()
-      pdf(sprintf("img/qplot-counts-%s.pdf", c), width=20, height=5)
+      pdf(sprintf("img/qplots/qplot-counts-%s.pdf", c), width=20, height=5)
       psi.qplot(counts1[[c]], labels=labs)
       dev.off()
       ## DGNS pooling
@@ -2168,6 +2168,7 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
   x <- px <- px1 <- mpx <- list()
   px[[c]] <- mapply("/", x[[c]], lapply(x[[c]], rowSums), SIMPLIFY=FALSE)
   mpx[[c]] <- sapply(px[[c]], colMeans)
+  
 #+end_src
 
 ****** Recipient chunk Lengths
@@ -2320,16 +2321,25 @@ text(pos, labels=rownames(pos))
                   recips.midpoints <- (recips.Rboundaries + recips.Lboundaries) / 2
               }
               pdf(pdf.file, width=30, height=10)
-              image(props1r, xaxt="n", yaxt="n")
+              image(props1r, xaxt="n", yaxt="n", main=sub("\\.pdf$", "", basename(pdf.file)))
               abline(v=c(0,recips.Rboundaries), lwd=3)
               axis(side=1, at=recips.midpoints, labels=unique(recips), las=2, cex.lab=2)
               axis(side=2, at=donor.midpoints, labels=donors, cex.lab=2)
               dev.off()
   
+              pdf(paste(sub("\\.pdf$", "", pdf.file), ".qplot.pdf", sep=""), width=30, height=10)
+              psi.qplot(props1r, labels=factor(recips, levels=unique(recips)), main=sub("\\.pdf$", "", basename(pdf.file)))
+              dev.off()
+              
+              pdf(paste(sub("\\.pdf$", "", pdf.file), ".qplot.averaged.pdf", sep=""), width=30, height=10)
+              psi.qplot(props1r, labels=factor(recips, levels=unique(recips)), main=sub("\\.pdf$", "", basename(pdf.file)), means=TRUE)
+              dev.off()
+              
               p[[basename(pdf.file)]] <- props1r
           }
       }
   }
+  
 #+end_src
 ****** Email to Garrett
 Hi Garrett,
@@ -2360,13 +2370,15 @@ http://www.stats.ox.ac.uk/~davison/pobi/copying/props.Averaged.pdf
 - We /do/ see most Norwegian copying in Orkney, as one might
   expect (props.pdf)
 - The top copiers of Scandinavia (Denmark, Sweden, Norway) are
-  Lancashire, North Pembrokeshire, Orkney, Yorkshire
+  Lancashire, Orkney, Yorkshire.
+- Re Scandinavian copying, North Pembrokeshire is high in the
+  populations analysis but low in the individuals analysis.
 
 ****** Scandinavian copying proportions
 #+begin_src R :rownames yes :results value replace 
 sort(p$props.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
 #+end_src
-******* 
+******* Fit Populations
 #+results:
 | LAN | 0.472464684216484 |
 | NPE | 0.457006785684227 |
@@ -2400,6 +2412,7 @@ sort(p$props.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
 | COR | 0.140848579852128 |
 | NHA |                 0 |
 
+******* Fit Individuals
 #+begin_src R :rownames yes :results value replace 
 sort(p$props.FitInd.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
 #+end_src
@@ -2436,7 +2449,6 @@ sort(p$props.FitInd.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
 | NWA | 0.241778018066776 |
 | SPE | 0.237751742078069 |
 | NHA | 0.212554346129616 |
-
 
 
 **** Haploid unsupervised model?
