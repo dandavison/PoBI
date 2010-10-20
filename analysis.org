@@ -1702,6 +1702,68 @@ unique(unlist(o))
 
 #+results:
 : 199
+****** Check chunk sizes
+This demonstrated that occasionally, the UK output had a different
+number of SNPs.
+
+#+begin_src R
+  list.chunk.sizes <- function(pop, chrom) {
+      cat(pop, "\n")
+      files <- list.files(path=file.path("impute2", pop, "out", chrom),
+                          pattern="[0-9][0-9][0-9]_haps$",
+                          full.names=TRUE)
+      count.snps <- function(f)
+          as.integer(system(paste("wc -l <", f), intern=TRUE))
+      sapply(files, count.snps)
+  }
+  
+  chrom <- "18"
+  sapply(unique(as.character(indivs.d$reg2)), list.chunk.sizes, chrom)
+#+end_src
+
+***** Reduce to common SNP set
+#+begin_src R
+  insect.chroms <- c("16", "16.0", "17", "18", "18.0", "19", "20", "20.0", "21", "22", "22.0")
+  pops <- unique(as.character(indivs.d$reg2))
+  
+  
+  lf <- function(pop)
+      list.files(path=file.path("impute2", pop, "out", c),
+                 pattern="[0-9][0-9][0-9]_haps$",
+                 full.names=TRUE)
+  
+  insect.chunk <- function(files) {
+      ## chunks <- sub(".+\\([0-9][0-9][0-9]\\)_haps$", "\\1", files)
+      chunks <- sub("_haps", "", sapply(strsplit(files, "/"), "[", 5))
+      chunk <- chunks[1]
+      stopifnot(chunk == chunks)
+      odir <- file.path("insect", c, chunk)
+      dir.create(odir, recursive=TRUE)
+      ## ofiles <- gsub("/", "_", files)
+      ofiles <- file.path(odir,
+                          sapply(lapply(strsplit(files, "/"), "[", c(2,4,5)), paste, collapse="_"))
+      file.symlink(file.path("~/bench", files), ofiles)
+      cmd <- paste("insect",
+                   "-f 1",
+                   "-d ' '",
+                   "-o", odir,
+                   paste(ofiles, collapse=" "))
+      print(cmd)
+      system(cmd)
+  }
+  
+  for(c in insect.chroms) {
+      pop.files <- sapply(pops, lf)
+      if(!is.matrix(pop.files)) {
+          cat("Different numbers of chunk files across pops:\n")
+          print(sapply(pop.files, length))
+          next
+      }
+      apply(pop.files, 1, insect.chunk)
+  }
+  
+#+end_src
+
 ***** Stitch haplotypes
 #+begin_src R :var pops=sample-sizes[,0]
   chrom.nchunks <- c("18"=28, "20"=24) ##, "22"=14)
@@ -1709,14 +1771,14 @@ unique(unlist(o))
   for(pop in pops) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
       for(c in names(chrom.nchunks)) {
-          outdir <- file.path("impute2", pop, "out", c)
-          hapfiles <- list.files(outdir, pattern="^[0-9]+_haps$", full.names=TRUE)
+          hapfiles <- list.files(path=file.path("insect", c),
+                                 pattern=sprintf("%s_%s_[0-9][0-9][0-9]_haps.insect", pop, c),
+                                 recursive=TRUE, full.names=TRUE)
           stopifnot(length(hapfiles) == chrom.nchunks[c])
           cat(sprintf("%20s %s\n", pop, c))
           stitch.haplotypes(hapfiles, ids, stitchedfile(c, pop), nolap=noverlap)
       }
   }
-
 #+end_src
 **** TODO What's going on with chromosome 1 ??
 **** STARTED Copying Analysis
