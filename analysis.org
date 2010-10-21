@@ -178,6 +178,25 @@
   stopifnot(nwtccc2 == 8267)
 #+end_src
 
+#+srcname: countries
+#+begin_src R :results value replace
+table(indivs.d$reg2)
+#+end_src
+
+#+results: countries
+| Belgium |  544 |
+| Denmark |  332 |
+| France  |  479 |
+| Germany | 1100 |
+| Ireland |   61 |
+| Italy   |  745 |
+| Norway  |  953 |
+| Poland  |   58 |
+| Spain   |  205 |
+| Sweden  | 1212 |
+| UK      | 2578 |
+
+
 * Sample sizes
   :PROPERTIES:
   :results: value replace
@@ -752,10 +771,17 @@ From comment in R function:
 #+begin_src R
 
 #+end_src
-
 **** Unsupervised clustering/ordination
 ***** PCA: congruence of genetic and geographic maps
 [[file:pobi-pca-scatter-zoom.png]]
+
+#+srcname: concatenate-data
+#+begin_src R
+
+#+end_src
+
+
+
 ***** Structure
 ***** SFA
 **** IBD sharing HMM
@@ -1170,7 +1196,6 @@ Functions to compute frequency of allele 0
       -hwe 20 \
       -maf 0 .001 \
       -snp-missing-rate .02
-
 #+end_src
 
 ****** Babel script
@@ -1196,7 +1221,7 @@ Functions to compute frequency of allele 0
 #+end_src
 ***** Write per-population per-chunk scripts
 #+begin_src R :results output :results replace
-  for(pop in c(levels(indivs.d$reg2), "All")) {
+  for(pop in levels(indivs.d$reg2)) {
       cat("\n", pop, "\n")
       odir <- file.path("impute2", pop)
       dir.create(file.path(odir, "log"), recursive=TRUE)
@@ -1246,9 +1271,7 @@ Functions to compute frequency of allele 0
 
 #+results:
 #+begin_example
-
-
- Belgium
+ Belgium 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1272,7 +1295,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Denmark
+ Denmark 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1296,7 +1319,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- France
+ France 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1320,7 +1343,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Germany
+ Germany 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1344,7 +1367,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Ireland
+ Ireland 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1368,7 +1391,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Italy
+ Italy 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1392,7 +1415,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Norway
+ Norway 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1416,7 +1439,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Poland
+ Poland 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1440,7 +1463,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Spain
+ Spain 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1464,7 +1487,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- Sweden
+ Sweden 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1488,7 +1511,7 @@ Functions to compute frequency of allele 0
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 
- UK
+ UK 
 01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
 02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
 03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
@@ -1511,31 +1534,6 @@ Functions to compute frequency of allele 0
 20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
 21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
 22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
-
- All
-01  71 intervals, diff range 1947939 29320726 ,  1 above nominal chunk size,  1 above 1.5 times nominal
-02  75 intervals, diff range 1667434 12608671 ,  3 above nominal chunk size,  1 above 1.5 times nominal
-03  63 intervals, diff range 1277688 10849435 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-04  55 intervals, diff range 1633306 7077615 ,  2 above nominal chunk size,  0 above 1.5 times nominal
-05  57 intervals, diff range 1712913 7868008 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-06  60 intervals, diff range 1553309 7992761 ,  1 above nominal chunk size,  1 above 1.5 times nominal
-07  50 intervals, diff range 1552839 11479688 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-08  52 intervals, diff range 682891 9991574 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-09  44 intervals, diff range 1309703 33977466 ,  1 above nominal chunk size,  1 above 1.5 times nominal
-10  49 intervals, diff range 1352819 7537081 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-11  45 intervals, diff range 1572923 10271148 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-12  45 intervals, diff range 1457807 5989786 ,  1 above nominal chunk size,  0 above 1.5 times nominal
-13  35 intervals, diff range 1675859 4568098 ,  0 above nominal chunk size,  0 above 1.5 times nominal
-14  31 intervals, diff range 1496602 4062291 ,  0 above nominal chunk size,  0 above 1.5 times nominal
-15  28 intervals, diff range 1236343 5206165 ,  1 above nominal chunk size,  0 above 1.5 times nominal
-16  29 intervals, diff range 980027 14946008 ,  2 above nominal chunk size,  2 above 1.5 times nominal
-17  24 intervals, diff range 1618177 6194781 ,  2 above nominal chunk size,  0 above 1.5 times nominal
-18  28 intervals, diff range 1957661 5755362 ,  1 above nominal chunk size,  0 above 1.5 times nominal
-19  16 intervals, diff range 2410910 12411195 ,  2 above nominal chunk size,  1 above 1.5 times nominal
-20  24 intervals, diff range 1427002 7411540 ,  2 above nominal chunk size,  0 above 1.5 times nominal
-21  14 intervals, diff range 1250769 3131822 ,  0 above nominal chunk size,  0 above 1.5 times nominal
-22  14 intervals, diff range 1343493 3710465 ,  0 above nominal chunk size,  0 above 1.5 times nominal
-There were 50 or more warnings (use warnings() to see the first 50)
 #+end_example
 
 ****** Shell version
@@ -1561,6 +1559,116 @@ There were 50 or more warnings (use warnings() to see the first 50)
                > impute2/cmds/$c.sh
        	 done
        #+end_src
+***** Runs
+      :PROPERTIES:
+      :dir: /davison@login1-cluster1:bench/ 
+      :results: value replace
+      :END:
+      
+
+      level4:
+      - UK 01 - 12
+      - Germany 01 - 12
+      - Sweden 01 - 12
+      - Norway 01 - 12
+
+
+      #+begin_src sh
+      for i in `seq -w 1 22` ; do echo "$i" ; done
+      #+end_src
+
+      #+tblname: impute2 cluster jobs
+      |  1 |     |
+      |  2 |     |
+      |  3 |     |
+      |  4 |     |
+      |  5 |     |
+      |  6 |     |
+      |  7 |     |
+      |  8 |     |
+      |  9 |     |
+      | 10 |     |
+      | 11 | 3/4 |
+      | 12 | 3/4 |
+      | 13 |   2 |
+      | 14 |   2 |
+      | 15 |   2 |
+      | 16 |   2 |
+      | 17 |   4 |
+      | 18 |   3 |
+      | 19 |   4 |
+      | 20 |   2 |
+      | 21 |   4 |
+      | 22 |   3 |
+
+      #+srcname: chrom-nchunks
+      #+begin_src sh :var pop="Belgium"
+        for c in `seq -w 1 22` ; do
+            echo "$c    `ls impute2/$pop/cmds/$c | wc -l`"
+        done
+      #+end_src
+
+      |  1 | 71 |
+      |  2 | 75 |
+      |  3 | 63 |
+      |  4 | 55 |
+      |  5 | 57 |
+      |  6 | 60 |
+      |  7 | 50 |
+      |  8 | 52 |
+      |  9 | 44 |
+      | 10 | 49 |
+      | 11 | 45 |
+      | 12 | 45 |
+      | 13 | 35 |
+      | 14 | 31 |
+      | 15 | 28 |
+      | 16 | 29 |
+      | 17 | 24 |
+      | 18 | 28 |
+      | 19 | 16 |
+      | 20 | 24 |
+      | 21 | 14 |
+      | 22 | 14 |
+
+    #+srcname: chrom-phasing-finished
+    #+begin_src sh :var pops=countries[,0] :dir /davison@oak:bench/
+      echo "chrom $pops"
+      for c in `seq -w 1 22` ; do
+           echo -n "$c "
+           for pop in $pops ; do
+               echo -n "`ls impute2/$pop/out/$c/*_haps | wc -l` "
+           done
+           echo
+       done
+    #+end_src
+
+    #+results: chrom-phasing-finished
+    | chrom | Belgium | Denmark | France | Germany | Ireland | Italy | Norway | Poland | Spain | Sweden | UK |
+    |     1 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     2 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     3 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     4 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     5 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     6 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     7 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     8 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |     9 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |    10 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |    11 |       0 |      15 |      8 |       0 |      45 |     0 |      0 |     45 |    45 |      0 |  0 |
+    |    12 |       1 |      23 |      3 |       0 |      23 |     0 |      0 |     25 |    21 |      0 |  0 |
+    |    13 |      35 |      35 |     35 |       1 |      35 |     4 |      1 |     35 |    35 |      0 |  0 |
+    |    14 |       3 |      13 |      3 |       0 |      31 |     0 |      0 |     10 |    28 |      0 |  0 |
+    |    15 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |    16 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+    |    17 |      24 |      24 |     24 |      24 |      24 |    24 |     24 |     24 |    24 |     24 | 24 |
+    |    18 |      28 |      28 |     28 |      28 |      28 |    28 |     28 |     28 |    28 |     28 | 14 |
+    |    19 |      16 |      16 |     16 |      16 |      16 |    16 |     16 |     16 |    16 |     16 | 16 |
+    |    20 |      24 |      24 |     24 |      20 |      24 |    24 |     22 |     24 |    24 |      2 |  0 |
+    |    21 |      14 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
+    |    22 |      14 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
+
+
 ***** Test phasing
 ****** DONE Run twice on same input
 #+begin_src sh
@@ -1723,9 +1831,8 @@ number of SNPs.
 
 ***** Reduce to common SNP set
 #+begin_src R
-  insect.chroms <- c("16", "16.0", "17", "18", "18.0", "19", "20", "20.0", "21", "22", "22.0")
+  insect.chroms <- as.character(c(17,19,21,22))
   pops <- unique(as.character(indivs.d$reg2))
-  
   
   lf <- function(pop)
       list.files(path=file.path("impute2", pop, "out", c),
@@ -1755,7 +1862,7 @@ number of SNPs.
   for(c in insect.chroms) {
       pop.files <- sapply(pops, lf)
       if(!is.matrix(pop.files)) {
-          cat("Different numbers of chunk files across pops:\n")
+          cat("Chrom", c, "different numbers of chunk files across pops:\n")
           print(sapply(pop.files, length))
           next
       }
@@ -1765,20 +1872,22 @@ number of SNPs.
 #+end_src
 
 ***** Stitch haplotypes
-#+begin_src R :var pops=sample-sizes[,0]
-  chrom.nchunks <- c("18"=28, "20"=24) ##, "22"=14)
-  pops <- as.character(pops)
+#+begin_src R
+  chrom.nchunks <- c("17"=24, "19"=16, "21"=14, "22"=14)
+  pops <- as.character(unique(indivs.d$reg2))
   for(pop in pops) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
-      for(c in names(chrom.nchunks)) {
-          hapfiles <- list.files(path=file.path("insect", c),
-                                 pattern=sprintf("%s_%s_[0-9][0-9][0-9]_haps.insect", pop, c),
+      for(chr in names(chrom.nchunks)) {
+          hapfiles <- list.files(path=file.path("insect", chr),
+                                 pattern=sprintf("%s_%s_[0-9][0-9][0-9]_haps.insect", pop, chr),
                                  recursive=TRUE, full.names=TRUE)
-          stopifnot(length(hapfiles) == chrom.nchunks[c])
-          cat(sprintf("%20s %s\n", pop, c))
-          stitch.haplotypes(hapfiles, ids, stitchedfile(c, pop), nolap=noverlap)
+          stopifnot(length(hapfiles) == chrom.nchunks[chr])
+          cat(sprintf("%20s %s\n", pop, chr))
+          stitch.haplotypes(hapfiles, ids, stitchedfile(chr, pop), nolap=noverlap)
+  
       }
   }
+  
 #+end_src
 **** TODO What's going on with chromosome 1 ??
 **** STARTED Copying Analysis
@@ -1788,7 +1897,6 @@ number of SNPs.
 
 ***** R environment
 #+begin_src R
-  chroms <- as.character(c(18,20)) ##,22))
   SCA <- c("DEN","SWE","NOR")
 #+end_src
 
@@ -2449,7 +2557,6 @@ sort(p$props.FitInd.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
 | NWA | 0.241778018066776 |
 | SPE | 0.237751742078069 |
 | NHA | 0.212554346129616 |
-
 
 **** Haploid unsupervised model?
      Post-process to look at geographic origin of chomosomes in
