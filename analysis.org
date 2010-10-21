@@ -77,8 +77,6 @@
   PATH <- "/home/davison/src/shellfish/bin"
   system("mkdir -p stitched img rdata rlegend rmap flipind flipinput frdata freq lines indivs snpexclude indivexclude")
 
-  pops <- region.codes[[2]]
-  popcodes <- structure(pops, names=region.codes[[1]])
   chroms <- sprintf("%02d", 1:22)
   Ne <- 11418
   chunk <- 5e6
@@ -174,6 +172,8 @@
   stopifnot(!is.na(indivs.d$reg), indivs.d$reg != "NA")
   indivs.d$reg <- factor(indivs.d$reg)
   indivs.d$reg2 <- factor(ifelse(indivs.d$isPoBI, "UK", as.character(indivs.d$reg)))
+  countries <- unique(as.character(indivs.d$reg2))
+  popcodes <- structure(region.codes[[2]], names=region.codes[[1]])
   nwtccc2 <- nrow(indivs.d)
   stopifnot(nwtccc2 == 8267)
 #+end_src
@@ -195,7 +195,6 @@ table(indivs.d$reg2)
 | Spain   |  205 |
 | Sweden  | 1212 |
 | UK      | 2578 |
-
 
 * Sample sizes
   :PROPERTIES:
@@ -1608,6 +1607,7 @@ Functions to compute frequency of allele 0
         done
       #+end_src
 
+      #+results: chrom-nchunks
       |  1 | 71 |
       |  2 | 75 |
       |  3 | 63 |
@@ -1630,13 +1630,13 @@ Functions to compute frequency of allele 0
       | 20 | 24 |
       | 21 | 14 |
       | 22 | 14 |
-
+ 
     #+srcname: chrom-phasing-finished
-    #+begin_src sh :var pops=countries[,0] :dir /davison@oak:bench/
-      echo "chrom $pops"
+    #+begin_src sh :var countries=countries[,0] :_____dir /davison@oak:bench/
+      echo "chrom $countries"
       for c in `seq -w 1 22` ; do
            echo -n "$c "
-           for pop in $pops ; do
+           for pop in $countries ; do
                echo -n "`ls impute2/$pop/out/$c/*_haps | wc -l` "
            done
            echo
@@ -1655,19 +1655,27 @@ Functions to compute frequency of allele 0
     |     8 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
     |     9 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
     |    10 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |    11 |       0 |      15 |      8 |       0 |      45 |     0 |      0 |     45 |    45 |      0 |  0 |
-    |    12 |       1 |      23 |      3 |       0 |      23 |     0 |      0 |     25 |    21 |      0 |  0 |
-    |    13 |      35 |      35 |     35 |       1 |      35 |     4 |      1 |     35 |    35 |      0 |  0 |
-    |    14 |       3 |      13 |      3 |       0 |      31 |     0 |      0 |     10 |    28 |      0 |  0 |
+    |    11 |      14 |      15 |     35 |       0 |      45 |     5 |      0 |     45 |    45 |      0 |  0 |
+    |    12 |      14 |      23 |     24 |       0 |      23 |     1 |      0 |     25 |    21 |      0 |  0 |
+    |    13 |      35 |      35 |     35 |       1 |      35 |     4 |      4 |     35 |    35 |      0 |  0 |
+    |    14 |       3 |      13 |      3 |       0 |      31 |     0 |      0 |     10 |    29 |      0 |  0 |
     |    15 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
     |    16 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
     |    17 |      24 |      24 |     24 |      24 |      24 |    24 |     24 |     24 |    24 |     24 | 24 |
-    |    18 |      28 |      28 |     28 |      28 |      28 |    28 |     28 |     28 |    28 |     28 | 14 |
+    |    18 |      28 |      28 |     28 |      28 |      28 |    28 |     28 |     28 |    28 |     28 | 16 |
     |    19 |      16 |      16 |     16 |      16 |      16 |    16 |     16 |     16 |    16 |     16 | 16 |
-    |    20 |      24 |      24 |     24 |      20 |      24 |    24 |     22 |     24 |    24 |      2 |  0 |
+    |    20 |      24 |      24 |     24 |      20 |      24 |    24 |     22 |     24 |    24 |      3 |  0 |
     |    21 |      14 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
     |    22 |      14 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
 
+***** R environment
+#+begin_src R :var chrom.nchunks=chrom-nchunks
+  current.chroms <- as.character(c(17,19,21,22))
+  chrom.nchunks <- structure(chrom.nchunks[[2]], names=sprintf("%02d",chrom.nchunks[[1]]))
+  SCA <- c("DEN","SWE","NOR")
+#+end_src
+
+#+lob: lib/psi.org:qplots()
 
 ***** Test phasing
 ****** DONE Run twice on same input
@@ -1802,10 +1810,10 @@ null device
 #+results:
 ****** Check overlaps
 #+begin_src R :results value replace
-p <- lapply(chroms, function(c) scan(posfile(c, "w"), quiet=TRUE))
-i <- lapply(p, function(pos) make.intervals(length(pos), width=chunk*snpdensity, overlap=noverlap))
-o <- lapply(i, function(ints) ints[-nrow(ints),"end"] - ints[-1,"start"])
-unique(unlist(o))
+  p <- lapply(chroms, function(c) scan(posfile(c, "w"), quiet=TRUE))
+  i <- lapply(p, function(pos) make.intervals(length(pos), width=chunk*snpdensity, overlap=noverlap))
+  o <- lapply(i, function(ints) ints[-nrow(ints),"end"] - ints[-1,"start"])
+  unique(unlist(o))
 #+end_src
 
 #+results:
@@ -1831,9 +1839,6 @@ number of SNPs.
 
 ***** Reduce to common SNP set
 #+begin_src R
-  insect.chroms <- as.character(c(17,19,21,22))
-  pops <- unique(as.character(indivs.d$reg2))
-  
   lf <- function(pop)
       list.files(path=file.path("impute2", pop, "out", c),
                  pattern="[0-9][0-9][0-9]_haps$",
@@ -1859,10 +1864,10 @@ number of SNPs.
       system(cmd)
   }
   
-  for(c in insect.chroms) {
-      pop.files <- sapply(pops, lf)
+  for(c in current.chroms) {
+      pop.files <- sapply(countries, lf)
       if(!is.matrix(pop.files)) {
-          cat("Chrom", c, "different numbers of chunk files across pops:\n")
+          cat("Chrom", c, "different numbers of chunk files across countries:\n")
           print(sapply(pop.files, length))
           next
       }
@@ -1873,34 +1878,24 @@ number of SNPs.
 
 ***** Stitch haplotypes
 #+begin_src R
-  chrom.nchunks <- c("17"=24, "19"=16, "21"=14, "22"=14)
-  pops <- as.character(unique(indivs.d$reg2))
-  for(pop in pops) {
+  for(pop in countries) {
       ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
-      for(chr in names(chrom.nchunks)) {
+      for(chr in current.chroms) {
           hapfiles <- list.files(path=file.path("insect", chr),
                                  pattern=sprintf("%s_%s_[0-9][0-9][0-9]_haps.insect", pop, chr),
                                  recursive=TRUE, full.names=TRUE)
-          stopifnot(length(hapfiles) == chrom.nchunks[chr])
+          stopifnot(length(hapfiles) == chrom.nchunks[chr,1])
           cat(sprintf("%20s %s\n", pop, chr))
           stitch.haplotypes(hapfiles, ids, stitchedfile(chr, pop), nolap=noverlap)
   
       }
   }
-  
 #+end_src
 **** TODO What's going on with chromosome 1 ??
 **** STARTED Copying Analysis
      :PROPERTIES:
      :visibility: content
      :END:
-
-***** R environment
-#+begin_src R
-  SCA <- c("DEN","SWE","NOR")
-#+end_src
-
-#+lob: lib/psi.org:qplots()
 ***** emails
 ****** From Garrett 1
 From: Garrett Hellenthal <ghellenthal@gmail.com>
@@ -1988,9 +1983,7 @@ YOR - 18,20
 ***** STARTED Create Garrett input files
 #+begin_src R :var codes.d=region-codes :results output replace
   ndonors <- 50
-  chroms <- c("18","20") ##, "22")
-  pops <- levels(indivs.d$reg2)
-  stopifnot(pops[pops != "UK"] %in% names(popcodes))
+  stopifnot(countries[countries != "UK"] %in% names(popcodes))
   stopifnot(levels(indivs.d$reg) %in% names(popcodes))
   UKregions <- unique(as.character(indivs.d$reg[indivs.d$reg2 == "UK"]))
   
@@ -2034,14 +2027,14 @@ YOR - 18,20
   names(perms) <- popcodes[names(perms)]
   stopifnot(identical(perms, read.object("perms.rda")))
   
-  for(c in chroms) {
+  for(c in current.chroms) {
       leg0 <- read.chiamo.legend(stitchedfile(c, "Norway"))
       if(!file.exists(g.legfile(c)))
           write.table(leg0, file=g.legfile(c),
                       col.names=FALSE, row.names=FALSE, quote=FALSE)
       if(!file.exists(g.recombfile(c)))
           write.garrett.recomb.file(c, leg0)
-      for(pop in pops) {
+      for(pop in countries) {
           ids <- indivs.d$ID_1[indivs.d$reg2 == pop]
           hen <- stitchedfile(c, pop)
           leg <- read.chiamo.legend(hen)
@@ -2069,7 +2062,7 @@ YOR - 18,20
   write.table(cbind(popcodes, gsub(" ", "_", names(popcodes))),
                     file=g.codesfile(), quote=FALSE, row.names=FALSE, col.names=FALSE)
   recipients <- popcodes[c(UKregions, "Ireland")]
-  donors <- popcodes[pops[! pops %in% c("UK","Ireland")]]
+  donors <- popcodes[countries[! countries %in% c("UK","Ireland")]]
   cat(recipients, file=g.recipientfile(), sep="\n")
   
   cat(donors, file=g.donorfile(), sep="\n")
@@ -2229,8 +2222,8 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
       total.lengths[[c]] <- cp.read.recipient.chunk.lengths(c, dir=cpdir, exclude=exclude)
   }
   
-  stopifnot(unlist(lapply(counts, names)) %in% pops)
-  stopifnot(unlist(lapply(total.lengths, names)) %in% pops)
+  stopifnot(unlist(lapply(counts, names)) %in% countries)
+  stopifnot(unlist(lapply(total.lengths, names)) %in% countries)
   cM <- lapply(total.lengths, function(l) unlist(lapply(l, rowSums)))
   cM <- sapply(cM, function(x) unique(round(x, 1)))
   stopifnot(length(cM) == length(chroms))
