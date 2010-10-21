@@ -2557,21 +2557,7 @@ sort(p$props.FitInd.Grouped.Averaged.pdf[,"SCA"], decreasing=TRUE)
      Post-process to look at geographic origin of chomosomes in
      individuals?
 **** Haplogroups
-* Synchronise
-#+begin_src sh :results output
-  rsync -auvz --delete data/MS/ $cetus:data/MS/ && rsync -auvz --delete data/MS/ $oak:data/MS/
-#+end_src
-
-#+results:
-: building file list ... done
-:
-: sent 314 bytes  received 20 bytes  668.00 bytes/sec
-: total size is 612863  speedup is 1834.92
-: sending incremental file list
-:
-: sent 284 bytes  received 13 bytes  198.00 bytes/sec
-: total size is 612863  speedup is 2063.51
-
+* Config
 # Local Variables=
 # org-babel-default-header-args:R=((:session . "*R-PoBI*"))
 # End=
