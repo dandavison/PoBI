@@ -1088,8 +1088,8 @@ Was:
       system(cmd)
       freq[[c]]$w <- 1 - scan(freqfile(c,"w"))
       cat(freq[[c]]$w, sep="\n", file=freqfile(c,"w"))
-
-      png(file=sprintf("img/%s-freqs.png", c))
+  
+      png(file=sprintf("img/freqs/%s-freqs.png", c))
       plot(freq[[c]]$h, freq[[c]]$w, xlab="HapMap3",ylab="PoBI+MS")
       dev.off()
   }
