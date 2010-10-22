@@ -1610,116 +1610,117 @@ Functions to compute frequency of allele 0
       :dir: /davison@login1-cluster1:bench/ 
       :results: value replace
       :END:
-      
+****** Jobs
+       level4:
+       - UK 01 - 12
+       - Germany 01 - 12
+       - Sweden 01 - 12
+       - Norway 01 - 12
 
-      level4:
-      - UK 01 - 12
-      - Germany 01 - 12
-      - Sweden 01 - 12
-      - Norway 01 - 12
 
+       #+begin_src sh
+       for i in `seq -w 1 22` ; do echo "$i" ; done
+       #+end_src
 
-      #+begin_src sh
-      for i in `seq -w 1 22` ; do echo "$i" ; done
-      #+end_src
+       #+tblname: impute2 cluster jobs
+       | chrom | jobs | phased     | garrett |
+       |-------+------+------------+---------|
+       |     1 |      |            |         |
+       |     2 |      |            |         |
+       |     3 |      |            |         |
+       |     4 |      |            |         |
+       |     5 |      |            |         |
+       |     6 |      |            |         |
+       |     7 |      |            |         |
+       |     8 |      |            |         |
+       |     9 |      |            |         |
+       |    10 |    4 | yes        |         |
+       |    11 |  3/4 | yes        |         |
+       |    12 |  3/4 | yes        |         |
+       |    13 |    2 | yes        |         |
+       |    14 |    2 | UK stopped |         |
+       |    15 |    2 | UK stopped |         |
+       |    16 |    2 | yes        |         |
+       |    17 |    4 | yes        |         |
+       |    18 |    3 | yes        |         |
+       |    19 |    4 | yes        |         |
+       |    20 |    2 | yes        |         |
+       |    21 |    4 | yes        |         |
+       |    22 |    3 | yes        |         |
 
-      #+tblname: impute2 cluster jobs
-      | chrom | jobs | phased | garrett |
-      |-------+------+--------+---------|
-      |     1 |      |        |         |
-      |     2 |      |        |         |
-      |     3 |      |        |         |
-      |     4 |      |        |         |
-      |     5 |      |        |         |
-      |     6 |      |        |         |
-      |     7 |      |        |         |
-      |     8 |      |        |         |
-      |     9 |      |        |         |
-      |    10 |    4 |        |         |
-      |    11 |  3/4 |        |         |
-      |    12 |  3/4 |        |         |
-      |    13 |    2 |        |         |
-      |    14 |    2 |        |         |
-      |    15 |    2 |        |         |
-      |    16 |    2 |        |         |
-      |    17 |    4 | yes    |         |
-      |    18 |    3 |        |         |
-      |    19 |    4 | yes    |         |
-      |    20 |    2 |        |         |
-      |    21 |    4 | yes    |         |
-      |    22 |    3 | yes    |         |
-
+****** Number of chunks
       #+srcname: chrom-nchunks
-      #+begin_src sh :var pop="Belgium"
-        for c in `seq -w 1 22` ; do
-            echo "$c    `ls impute2/$pop/cmds/$c | wc -l`"
-        done
-      #+end_src
+       #+begin_src sh :var pop="Belgium"
+         for c in `seq -w 1 22` ; do
+             echo "$c    `ls impute2/$pop/cmds/$c | wc -l`"
+         done
+       #+end_src
 
-      #+results: chrom-nchunks
-      |  1 | 71 |
-      |  2 | 75 |
-      |  3 | 63 |
-      |  4 | 55 |
-      |  5 | 57 |
-      |  6 | 60 |
-      |  7 | 50 |
-      |  8 | 52 |
-      |  9 | 44 |
-      | 10 | 49 |
-      | 11 | 45 |
-      | 12 | 45 |
-      | 13 | 35 |
-      | 14 | 31 |
-      | 15 | 28 |
-      | 16 | 29 |
-      | 17 | 24 |
-      | 18 | 28 |
-      | 19 | 16 |
-      | 20 | 24 |
-      | 21 | 14 |
-      | 22 | 14 |
- 
-    #+srcname: chrom-phasing-finished
-    #+begin_src sh :var countries=countries[,0] :_____dir /davison@oak:bench/ :colnames yes
-      echo "chrom $countries"
-      for c in `seq -w 1 22` ; do
-           echo -n "$c "
-           for pop in $countries ; do
-               echo -n "`ls impute2/$pop/out/$c/*_haps | wc -l` "
-           done
-           echo
-       done
-    #+end_src
+       #+results: chrom-nchunks
+       |  1 | 71 |
+       |  2 | 75 |
+       |  3 | 63 |
+       |  4 | 55 |
+       |  5 | 57 |
+       |  6 | 60 |
+       |  7 | 50 |
+       |  8 | 52 |
+       |  9 | 44 |
+       | 10 | 49 |
+       | 11 | 45 |
+       | 12 | 45 |
+       | 13 | 35 |
+       | 14 | 31 |
+       | 15 | 28 |
+       | 16 | 29 |
+       | 17 | 24 |
+       | 18 | 28 |
+       | 19 | 16 |
+       | 20 | 24 |
+       | 21 | 14 |
+       | 22 | 14 |
 
-    #+results: chrom-phasing-finished
-    | chrom | Belgium | Denmark | France | Germany | Ireland | Italy | Norway | Poland | Spain | Sweden | UK |
-    |     1 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     2 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     3 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     4 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     5 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     6 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     7 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     8 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |     9 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |    10 |      49 |      49 |     49 |      49 |      49 |    49 |     49 |     49 |    49 |     49 |  0 |
-    |    11 |      16 |      18 |     35 |      45 |      45 |    45 |     45 |     45 |    45 |     45 | 44 |
-    |    12 |      15 |      23 |     24 |      45 |      23 |    33 |     45 |     25 |    23 |     45 | 42 |
-    |    13 |      35 |      35 |     35 |      16 |      35 |    20 |     20 |     35 |    35 |      5 |  1 |
-    |    14 |      17 |      21 |     11 |       4 |      31 |    14 |      4 |     19 |    30 |      2 |  0 |
-    |    15 |      28 |      28 |     10 |       0 |      28 |     0 |      0 |     28 |     0 |      0 |  0 |
-    |    16 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |    17 |      24 |      24 |     24 |      24 |      24 |    24 |     24 |     24 |    24 |     24 | 24 |
-    |    18 |      28 |      28 |     28 |      28 |      28 |    28 |     28 |     28 |    28 |     28 | 27 |
-    |    19 |      16 |      16 |     16 |      16 |      16 |    16 |     16 |     16 |    16 |     16 | 16 |
-    |    20 |      24 |      24 |     24 |      22 |      24 |    24 |     22 |     24 |    24 |     10 |  1 |
-    |    21 |      14 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
-    |    22 |      14 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
+****** Progress
+     #+srcname: chrom-phasing-finished
+     #+begin_src sh :var countries=countries[,0] :_____dir /davison@oak:bench/ :colnames yes
+       echo "chrom $countries"
+       for c in `seq -w 1 22` ; do
+            echo -n "$c "
+            for pop in $countries ; do
+               	echo -n "`ls impute2/$pop/out/$c/*_haps | wc -l` "
+            done
+            echo
+       	done
+     #+end_src
+
+     #+results: chrom-phasing-finished
+     | chrom | Denmark | France | Germany | Ireland | Italy | Norway | Poland | Spain | Sweden | UK |
+     |     1 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     2 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     3 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     4 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     5 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     6 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     7 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     8 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |     9 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
+     |    10 |      49 |     49 |      49 |      49 |    49 |     49 |     49 |    49 |     49 | 49 |
+     |    11 |      45 |     45 |      45 |      45 |    45 |     45 |     45 |    45 |     45 | 45 |
+     |    12 |      45 |     45 |      45 |      45 |    45 |     45 |     45 |    45 |     45 | 45 |
+     |    13 |      35 |     35 |      35 |      35 |    35 |     35 |     35 |    35 |     35 | 35 |
+     |    14 |      31 |     31 |      31 |      31 |    31 |     31 |     31 |    31 |     31 | 29 |
+     |    15 |      28 |     28 |      28 |      28 |    28 |     28 |     28 |    28 |     28 | 26 |
+     |    16 |      29 |     29 |      29 |      29 |    29 |     29 |     29 |    29 |     29 | 29 |
+     |    17 |      24 |     24 |      24 |      24 |    24 |     24 |     24 |    24 |     24 | 24 |
+     |    18 |      28 |     28 |      28 |      28 |    28 |     28 |     28 |    28 |     28 | 28 |
+     |    19 |      16 |     16 |      16 |      16 |    16 |     16 |     16 |    16 |     16 | 16 |
+     |    20 |      24 |     24 |      24 |      24 |    24 |     24 |     24 |    24 |     24 | 24 |
+     |    21 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
+     |    22 |      14 |     14 |      14 |      14 |    14 |     14 |     14 |    14 |     14 | 14 |
 
 ***** R environment
 #+begin_src R :var chrom.nchunks=chrom-nchunks
-  current.chroms <- as.character(c(17,19,21,22))
+  current.chroms <- as.character(c(10,11,12,13,16,18,20))  ## c(17,19,21,22))
   chrom.nchunks <- structure(chrom.nchunks[[2]], names=sprintf("%02d",chrom.nchunks[[1]]))
   SCA <- c("DEN","SWE","NOR")
 #+end_src
