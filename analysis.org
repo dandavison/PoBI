@@ -178,15 +178,17 @@
   countries <- unique(as.character(indivs.d$reg2))
   popcodes <- structure(region.codes[[2]], names=region.codes[[1]])
   nwtccc2 <- nrow(indivs.d)
+  nreg <- table(indivs.d$reg)
+  nreg2 <- table(indivs.d$reg2)
   stopifnot(nwtccc2 == 8267)
 #+end_src
 
 #+srcname: countries
-#+begin_src R :results value replace
+#+begin_src R :results value replace :cache yes
 table(indivs.d$reg2)
 #+end_src
 
-#+results: countries
+#+results[c9a88b70a6d4501590f9f91b78a62850ec749cfd]: countries
 | Belgium |  544 |
 | Denmark |  332 |
 | France  |  479 |
@@ -769,7 +771,22 @@ From comment in R function:
       ##   parental pop allele frequencies pi ~ Beta( p0Gi, (1-p0)Gi )
       ##   admixture proportion q
       ##   obtain sample from posterior distribution of (p0, F1, F2, p1, p2, q)
+***** TODO Create allele frequency files
+#+begin_src R
+  for(reg in levels(indivs.d$reg)) {
+      for(chr in chroms) {
+          cmd <- sprintf("sstat -p -n %d < %s > %s", nreg[reg],
+                         frdatafile(chr, "w"),
+                         freqfile(chr, popcodes[reg]))
+          cat(cmd, "\n")
+          system(cmd)
+      }
+  }
+  
+#+end_src
 
+***** TODO Create missing frequency files
+***** TODO Create allele count files
 ***** Create thinned data set
 #+begin_src R
   celine <- read.table("~/wtccc2/celine-snps-ill.map", as.is=TRUE)
@@ -809,8 +826,9 @@ From comment in R function:
   parents <- list(NORDEN=list("NOR"),list("DEN"),
                   SCASPA=list("NOR","SWE","DEN"),list("SPA"))
   
-  for(par in names(parents)) {
-      admix.create.data.set(par, parents[[par]])
+  for(reg in levels(indivs.d$reg)) {
+      for(chr in chroms)
+          create.allele.count.file(reg, gen=frdata(chr, "w"), file=allelecountfile(chr, pop))
       
     
   }
