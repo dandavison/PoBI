@@ -118,6 +118,9 @@
   frdatafile <- function(chr, dataset)
       sprintf("frdata/%s-%s.%s", dataset, chr,
               if(dataset == "w") "gen" else "hap")
+  frtdatafile <- function(chr, dataset) 
+      sprintf("frtdata/%s-%s.%s", dataset, chr,
+              if(dataset == "w") "gen" else stop("No need for this"))
   linesfile <- function(chr, dataset)
       sprintf("lines/%s-%s.lines", dataset, chr)
   freqfile <- function(chr, dataset)
@@ -767,8 +770,52 @@ From comment in R function:
       ##   admixture proportion q
       ##   obtain sample from posterior distribution of (p0, F1, F2, p1, p2, q)
 
+***** Create thinned data set
 #+begin_src R
+  celine <- read.table("~/wtccc2/celine-snps-ill.map", as.is=TRUE)
+  colnames(celine) <- c("chrom","rs","cM", "bp","a1","a2")
+  tempfile <- "/tmp/lines.idx"
+  
+  for(chr in chroms) {
+      cat(chr, "\n")
+      pipe <- pipe(sprintf("cut -d' ' -f2 < %s", frdatafile(chr, "w")))
+      rs <- scan(pipe, what="")
+      cat("\t", "Read", length(rs), "SNPs from full WTCCC2 data\n")
+  
+      exclude <- scan(snpexcludefile(chr, "w"), what="")
+      exclude <- sapply(strsplit(exclude, ":"), "[", 2)
+      exclude <- exclude[exclude %in% celine]
+  
+      bad <- rs %in% exclude
+  
+      cat("\t", sum(rs %in% celine$rs), "in Celine's set of which a further", sum(bad), "are to be excluded\n")
+      
+      rsx <- rs[!bad]
+      
+      idx <- match(celine$rs, rsx)
+      idx <- idx[!is.na(idx)]
+  
+      cat("\t", sum(diff(idx) <= 0), "out of order\n")
+      cat(idx, file=tempfile, sep="\n")
+      cmd <- sprintf("lines -f %s < %s > %s",
+                     tempfile, frdatafile(chr,"w"), frtdatafile(chr, "w"))
+      cat("\t", cmd, "\n")
+      system(cmd)
+  }
+#+end_src
 
+***** Create parental admix data
+#+begin_src R
+  parents <- list(NORDEN=list("NOR"),list("DEN"),
+                  SCASPA=list("NOR","SWE","DEN"),list("SPA"))
+  
+  for(par in names(parents)) {
+      admix.create.data.set(par, parents[[par]])
+      
+    
+  }
+  
+  
 #+end_src
 **** Unsupervised clustering/ordination
 ***** PCA: congruence of genetic and geographic maps
