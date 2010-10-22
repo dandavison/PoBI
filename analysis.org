@@ -1681,7 +1681,7 @@ Functions to compute frequency of allele 0
       | 22 | 14 |
  
     #+srcname: chrom-phasing-finished
-    #+begin_src sh :var countries=countries[,0] :_____dir /davison@oak:bench/
+    #+begin_src sh :var countries=countries[,0] :_____dir /davison@oak:bench/ :colnames yes
       echo "chrom $countries"
       for c in `seq -w 1 22` ; do
            echo -n "$c "
@@ -1703,9 +1703,9 @@ Functions to compute frequency of allele 0
     |     7 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
     |     8 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
     |     9 |       0 |       0 |      0 |       0 |       0 |     0 |      0 |      0 |     0 |      0 |  0 |
-    |    10 |      49 |      49 |     49 |       1 |      49 |    45 |      6 |     49 |    49 |      0 |  0 |
-    |    11 |      16 |      18 |     35 |      45 |      45 |    45 |     45 |     45 |    45 |     45 |  3 |
-    |    12 |      15 |      23 |     24 |      44 |      23 |    33 |     45 |     25 |    23 |     45 |  1 |
+    |    10 |      49 |      49 |     49 |      49 |      49 |    49 |     49 |     49 |    49 |     49 |  0 |
+    |    11 |      16 |      18 |     35 |      45 |      45 |    45 |     45 |     45 |    45 |     45 | 44 |
+    |    12 |      15 |      23 |     24 |      45 |      23 |    33 |     45 |     25 |    23 |     45 | 42 |
     |    13 |      35 |      35 |     35 |      16 |      35 |    20 |     20 |     35 |    35 |      5 |  1 |
     |    14 |      17 |      21 |     11 |       4 |      31 |    14 |      4 |     19 |    30 |      2 |  0 |
     |    15 |      28 |      28 |     10 |       0 |      28 |     0 |      0 |     28 |     0 |      0 |  0 |
