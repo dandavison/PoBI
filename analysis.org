@@ -125,6 +125,12 @@
       sprintf("lines/%s-%s.lines", dataset, chr)
   freqfile <- function(chr, dataset)
       sprintf("freq/%s-%s.freq", dataset, chr)
+  missfile <- function(chr, dataset)
+      sprintf("miss/%s-%s.miss", dataset, chr)
+  countsfile <- function(chr, dataset)
+      sprintf("counts/%s-%s.counts", dataset, chr)
+  chisqfile <- function(chr, dataset)
+      sprintf("chisq/%s-%s.chisq", dataset, chr)
   flipindfile <- function(chr, dataset)
       sprintf("flipind/%s-%s.flip", dataset, chr)
   flipinputfile <- function(chr, dataset)
@@ -180,6 +186,8 @@
   nwtccc2 <- nrow(indivs.d)
   nreg <- table(indivs.d$reg)
   nreg2 <- table(indivs.d$reg2)
+  regfacfile <- "reg.factor"
+  cat(indivs.d$reg, sep="\n", file=regfacfile)
   stopifnot(nwtccc2 == 8267)
 #+end_src
 
@@ -755,9 +763,52 @@ a null model of isolation by distance.
 
 ** Introduction
 ** Results
+*** Description of data set
+    :PROPERTIES:
+    :results: value replace
+    :END:
+    
+    The PoBI data set studied here comprises
+    src_R{sum(indivs.d$isPoBI)} individuals from the UK, broken down
+    by collection locality as follows:
+
+#+begin_src R
+table(factor(indivs.d$reg[indivs.d$isPoBI]))
+#+end_src
+
+#+results:
+| Argyll and Bute     |  49 |
+| Banff and Buchan    |  64 |
+| Cheshire            |  52 |
+| Cornwall            | 104 |
+| Cumbria             | 259 |
+| Derbyshire          |  11 |
+| Devon               |  90 |
+| Dorset              |  45 |
+| Forest of Dean      |  48 |
+| Gloucestershire     |  47 |
+| Hampshire           |  50 |
+| Herefordshire       |  31 |
+| Kent                |  74 |
+| Lancashire          |  45 |
+| Leicestershire      |  88 |
+| Lincolnshire        | 151 |
+| Norfolk             | 119 |
+| North East          | 227 |
+| North Pembrokeshire |  56 |
+| North Wales         |  87 |
+| Northamptonshire    |  47 |
+| Northern Ireland    |  62 |
+| Nottinghamshire     |  80 |
+| Orkney              | 101 |
+| Oxfordshire         | 122 |
+| South Pembrokeshire |  14 |
+| Suffolk             | 105 |
+| Sussex              |  81 |
+| Worcestershire      |  42 |
+| Yorkshire           | 227 |
+
 *** Genotype-based
-**** Allele frequency differentiation
-***** Candidate SNPs
 **** Proxy-population admixture analyses
 #+lob: lib/psi.org:admixmcmc()
 
@@ -771,22 +822,111 @@ From comment in R function:
       ##   parental pop allele frequencies pi ~ Beta( p0Gi, (1-p0)Gi )
       ##   admixture proportion q
       ##   obtain sample from posterior distribution of (p0, F1, F2, p1, p2, q)
-***** TODO Create allele frequency files
+
+These blocks create tabular files, the columns of which correspond to
+geographic regions; the order is the same as the order of
+levels(indivs.d$reg) (i.e. alphabetical).
+
+***** DONE Create allele frequency files
 #+begin_src R
-  for(reg in levels(indivs.d$reg)) {
-      for(chr in chroms) {
-          cmd <- sprintf("sstat -p -n %d < %s > %s", nreg[reg],
-                         frdatafile(chr, "w"),
-                         freqfile(chr, popcodes[reg]))
-          cat(cmd, "\n")
-          system(cmd)
-      }
+  for(chr in chroms) {
+      cmd <- sprintf("sstat -p -n %d -f %s < %s > %s",
+                     nwtccc2,
+                     regfacfile,
+                     frdatafile(chr, "w"),
+                     freqfile(chr, "reg"))
+      cat(cmd, "\n")
+      system(cmd)
+  }
+#+end_src
+
+***** DONE Create missing frequency files
+#+begin_src R
+  for(chr in chroms) {
+      cmd <- sprintf("sstat -mp -n %d -f %s < %s > %s",
+                     nwtccc2,
+                     regfacfile,
+                     frdatafile(chr, "w"),
+                     missfile(chr, "reg"))
+      cat(cmd, "\n")
+      system(cmd)
+  }
+#+end_src
+***** DONE Create allele count files
+#+begin_src R
+  for(chr in chroms) {
+      cat(chr, "\n")
+      pna <- matrix(scan(missfile(chr, "reg")), nrow=nlevels(indivs.d$reg))
+      freq <- matrix(scan(freqfile(chr, "reg")), nrow=nlevels(indivs.d$reg))
+      counts <- freq * (1-pna) * c(nreg) * 2
+      write.table(round(t(counts)), file=countsfile(chr, "reg"),
+                  quote=FALSE, row.names=FALSE, col.names=FALSE)
+  }
+#+end_src
+
+***** TODO Chi-squared tests
+****** Regions with n > 40
+#+begin_src R
+  tab <- table(indivs.d$reg[indivs.d$isPoBI])
+  names(tab) <- popcodes[names(tab)]
+  ok <- tab > 40
+  ceiling <- 40
+  for(chr in rev(chroms)) {
+      cat(chr, "\n")
+      leg <- read.chiamo.legend(frdatafile(chr, "w"))
+      counts <- matrix(scan(countsfile(chr, "reg")), nrow=nlevels(indivs.d$reg))
+      rownames(counts) <- popcodes[levels(indivs.d$reg)]
+      counts <- counts[ok,]
+      chi <- chisq.test.counts(n1=counts, n=tab[ok])
+      nlogp <- -log10(chi$p.value)
+      ## cat(-log10(chi$p.value), sep="\n", file=chisqfile(chr, "reg"))
+      ## pdf(file=paste(chisqfile(chr, "reg"), ".pdf", sep=""), width=30, height=10)
+      png(file=paste(chisqfile(chr, "reg"), ".png", sep=""), width=1000, height=500)
+      hi <- nlogp > ceiling
+      col=ifelse(hi, 2, 1)
+      nlogp[hi] <- ceiling
+      plot(leg$pos, nlogp, col=col, pch="+", ylim=c(0,ceiling))
+      dev.off()
+  }
+#+end_src
+****** Pooled regions
+#+begin_src R
+  north <- c("ANB","BNB","CUM")
+  south <- c("SUS","HAM","DOR","KEN")
+  stopifnot(north %in% popcodes,
+            south %in% popcodes)
+  leg <- map(chroms,
+             function(chr) read.chiamo.legend(frdatafile(chr, "w")))
+  counts <- map(chroms, 
+                function(chr) {
+                    x <- matrix(scan(countsfile(chr, "reg")), nrow=nlevels(indivs.d$reg))
+                    rownames(x) <- popcodes[levels(indivs.d$reg)]
+                    rbind(north=colSums(x[north,,drop=FALSE]),
+                          south=colSums(x[south,,drop=FALSE]))
+                })
+  chi <- map(counts, chisq.test.counts, n=c(sum(tab[north]), sum(tab[south])))
+  nlogp <- map(chi, function(x) -log10(x$p.value))
+  
+  save(leg, file="rda/leg.rda")
+  save(counts, file="rda/counts.rda")
+  
+  for(chr in rev(chroms)) {
+      cat(chr, "\n")
+      cat(nlogp[[chr]], sep="\n", file=chisqfile(chr, "N-S"))
+      png(file=paste(chisqfile(chr, "N-S"), ".png", sep=""), width=1000, height=500)
+      hi <- nlogp[[chr]] > ceiling
+      col=ifelse(hi, 2, 1)
+      nlogp[hi] <- ceiling
+      plot(leg[[chr]]$pos, nlogp[[chr]], col=col, pch="+", ylim=c(0,ceiling))
+      if(chr == "06")
+          abline(v=c(27,33)*1e6, col="blue", lty=2)
+      else if(chr == "02")
+          abline(v=136.5e6, col="blue", lty=2)
+      dev.off()
   }
   
 #+end_src
 
-***** TODO Create missing frequency files
-***** TODO Create allele count files
 ***** Create thinned data set
 #+begin_src R
   celine <- read.table("~/wtccc2/celine-snps-ill.map", as.is=TRUE)
@@ -835,16 +975,11 @@ From comment in R function:
   
   
 #+end_src
+**** Allele frequency differentiation
+***** Candidate SNPs
 **** Unsupervised clustering/ordination
 ***** PCA: congruence of genetic and geographic maps
 [[file:pobi-pca-scatter-zoom.png]]
-
-#+srcname: concatenate-data
-#+begin_src R
-
-#+end_src
-
-
 
 ***** Structure
 ***** SFA
@@ -1262,18 +1397,6 @@ Functions to compute frequency of allele 0
       -snp-missing-rate .02
 #+end_src
 
-****** Babel script
-#+begin_src R :noweb yes
-  <<set-variables()>>
-  <<set-up-data-frames()>>
-  <<create-isect()>>
-  <<create-restricted-files()>>
-  <<create-flip-indicator-files()>>
-  <<create-flipped-files()>>
-#+end_src
-
-#+results:
-: 0
 ***** Sample files and per-population exclude files
 #+begin_src R
   wtccc2.write.samplefile(indivs.d, file=indivsamplefile("w"))
@@ -2059,8 +2182,13 @@ YOR - 18,20
       op <- options() ; on.exit(options(op))
       options(scipen=100, digits=15)
       hmap <- read.table(mapfile(chrom, "h"), header=TRUE, as.is=TRUE)
+      rate <- hmap[["COMBINED_rate.cM.Mb."]]
+      bad <- rate < 0
+      cat(sum(bad), "positions with rate < 0\n")
+      hmap[["COMBINED_rate.cM.Mb."]][bad] <- 1e-3
       r <- approx(hmap[c("position","COMBINED_rate.cM.Mb.")], xout=leg$pos)$y
       stopifnot(diff(leg$pos) > 0)
+      stopifnot(!is.na(r) & r > 0)
       write.table(cbind(start.pos=leg$pos, recom.rate.perbp=r*1e-8),
                   file=g.recombfile(chrom), quote=FALSE, row.names=FALSE, col.names=TRUE)
   }
@@ -2280,6 +2408,19 @@ On Fri, Jun 18, 2010 at 11:04 AM, Dan Davison <davison@stats.ox.ac.uk>wrote:
 
 [4. application/octet-stream; BasqueCondOnEurope.recomrates]...
 #+end_example
+***** Jobs
+#+begin_src R
+  exclude <- c(2,74)
+  jobs.per.node <- 8
+  jobs <- read.table("jobs2", sep=" ", as.is=TRUE)
+  nnodes <- ceiling(nrow(jobs) / jobs.per.node)
+  available.nodes <- (1:80)[-exclude]
+  nodes <- rep(available.nodes, each=jobs.per.node)[1:nrow(jobs)]
+  args <- sprintf("-l h=comp%03d", nodes)
+  jobs[[12]] <- paste(jobs[[12]], args)
+  write.table(jobs, file="jobs.new", sep=" ", quote=FALSE, row.names=FALSE, col.names=FALSE)
+#+end_src
+
 ***** Recipient analysis
 #+begin_src R
   total.lengths <- counts <- mean.lengths <- list()
